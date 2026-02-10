@@ -96,7 +96,7 @@ const TeacherListPage = () => {
               </Tr>
             </Tbody>
           </Table>
-        </TableWrapper> 
+        </TableWrapper>
         <ButtonBox>
           <TeacherButton>교직원 등록</TeacherButton>
           <TeacherButton>교직원 다운로드</TeacherButton>
@@ -122,7 +122,6 @@ const UpsideBox = styled.div`
   display: flex;
   justify-content: space-between;
   margin-top: 34px;
-  //margin: 60px;
 `;
 
 const YearNavigator = styled.div`
