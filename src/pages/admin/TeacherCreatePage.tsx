@@ -75,7 +75,8 @@ const FormSpan = styled.span`
 `;
 
 const FormInput = styled.input`
-  padding: 18px 200px 18px 16px;
+  width: 465px;
+  padding: 18px 16px;
   outline: none;
   border: 1px solid #c1c6d1;
   border-radius: 6px;
