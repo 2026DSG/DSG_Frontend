@@ -8,7 +8,7 @@ const ApplicationListPage = () => {
   return (
     <Body>
       <TotalContainer>
-        <Header />
+        <Header title="신청자리스트" showBack />
         <UpsideBox>
           <YearNavigator>
             <img src={ArrowLeft} alt="이전 날짜" />
