@@ -1,13 +1,16 @@
 import styled from "@emotion/styled";
+import { useNavigate } from "react-router-dom";
 import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import Header from "../../components/Header";
 
 const TeacherListPage = () => {
+  const navigate = useNavigate();
+
   return (
     <Body>
       <TotalContainer>
-        <Header />
+        <Header title="메인페이지" />
         <UpsideBox>
           <YearNavigator>
             <img src={ArrowLeft} alt="이전 연도" />
@@ -15,7 +18,7 @@ const TeacherListPage = () => {
             <img src={ArrowRight} alt="이후 연도" />
           </YearNavigator>
 
-          <ApplicantListButton>
+          <ApplicantListButton onClick={() => navigate("/get/apply")}>
             <ApplicantListText>신청자 리스트</ApplicantListText>
             <img src={ArrowRight} alt="이동" />
           </ApplicantListButton>
@@ -98,7 +101,9 @@ const TeacherListPage = () => {
           </Table>
         </TableWrapper>
         <ButtonBox>
-          <TeacherButton>교직원 등록</TeacherButton>
+          <TeacherButton onClick={() => navigate("/post/teacher")}>
+            교직원 등록
+          </TeacherButton>
           <TeacherButton>교직원 다운로드</TeacherButton>
           <TeacherButton>파일 업로드</TeacherButton>
         </ButtonBox>
@@ -157,7 +162,6 @@ const TableWrapper = styled.div`
   overflow-y: auto;
 `;
 
-
 const Table = styled.table`
   width: 100%;
   //border-collapse: collapse;
@@ -172,7 +176,6 @@ const Thead = styled.thead`
 `;
 
 const Tbody = styled.tbody`
-
   tr:nth-of-type(odd) {
     background-color: white;
   }
@@ -238,6 +241,5 @@ const TeacherButton = styled.button`
   border-radius: 12px;
   background-color: #444f61;
 `;
-
 
 export default TeacherListPage;
