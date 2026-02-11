@@ -1,15 +1,30 @@
 //import React from 'react'
 import styled from "@emotion/styled";
 import ArrowLeft from "../assets/arrowLeft.svg";
-import Logo from "../assets/logo.svg";
+import Logo from "../assets/darkLogo.svg";
+import { useNavigate } from "react-router-dom";
 
-const Header = () => {
+interface HeaderProps {
+  title: string;
+  showBack?: boolean;
+}
+
+const Header = ({ title, showBack }: HeaderProps) => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <HeaderBox>
       <HeaderNav>
-        <HeaderLeft>
-          <img src={ArrowLeft} alt="뒤로가기" />
-          <PageTitle>신청자리스트</PageTitle>
+        <HeaderLeft
+          onClick={showBack ? handleBack : undefined}
+          style={{ cursor: showBack ? "pointer" : "default" }}
+        >
+          {showBack && <img src={ArrowLeft} alt="뒤로가기" />}
+          <PageTitle>{title}</PageTitle>
         </HeaderLeft>
         <img src={Logo} alt="서비스 로고" />
       </HeaderNav>
