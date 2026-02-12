@@ -3,6 +3,7 @@ import Header from "../../components/Header";
 import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import Calender from "../../assets/calender.svg";
+import Footer from "../../components/Footer";
 
 const ApplicationListPage = () => {
   return (
@@ -91,12 +92,16 @@ const ApplicationListPage = () => {
           <OutputButton>신청자 월별 액셀 출력</OutputButton>
         </ButtonBox>
       </TotalContainer>
+      <Footer/>
     </Body>
   );
 };
 
 const Body = styled.div`
   width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 `;
 
 const TotalContainer = styled.div`
@@ -104,6 +109,7 @@ const TotalContainer = styled.div`
   flex-direction: column;
   margin: 0px 120px;
   zoom: 0.8;
+  flex: 1;
 `;
 
 const UpsideBox = styled.div`
