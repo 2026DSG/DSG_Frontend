@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import styled from "@emotion/styled";
 
 const TeacherCreatePage = () => {
@@ -53,12 +54,16 @@ const TeacherCreatePage = () => {
           </CreateButton>
         </TeacherFormContainer>
       </TotalContainer>
+      <Footer/>
     </Body>
   );
 };
 
 const Body = styled.div`
   width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 `;
 
 const TotalContainer = styled.div`
@@ -66,6 +71,7 @@ const TotalContainer = styled.div`
   flex-direction: column;
   margin: 0px 120px;
   zoom: 0.8;
+  flex: 1;
 `;
 
 const TeacherFormContainer = styled.div`
