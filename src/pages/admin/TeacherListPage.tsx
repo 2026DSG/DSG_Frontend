@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 
 const TeacherListPage = () => {
   const navigate = useNavigate();
@@ -108,12 +109,16 @@ const TeacherListPage = () => {
           <TeacherButton>파일 업로드</TeacherButton>
         </ButtonBox>
       </TotalContainer>
+      <Footer />
     </Body>
   );
 };
 
 const Body = styled.div`
   width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 `;
 
 const TotalContainer = styled.div`
@@ -121,6 +126,7 @@ const TotalContainer = styled.div`
   flex-direction: column;
   margin: 0px 120px;
   zoom: 0.8;
+  flex: 1;
 `;
 
 const UpsideBox = styled.div`
