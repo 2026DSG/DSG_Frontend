@@ -3,9 +3,12 @@ import Header from "../../components/Header";
 import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import Calender from "../../assets/calender.svg";
+import Close from "../../assets/CloseButton.svg";
 import Footer from "../../components/Footer";
+import { useState } from "react";
 
 const ApplicationListPage = () => {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   return (
     <Body>
       <TotalContainer>
@@ -17,7 +20,7 @@ const ApplicationListPage = () => {
             <img src={ArrowRight} alt="이후 날짜" />
           </YearNavigator>
 
-          <CalenderButton>
+          <CalenderButton onClick={() => setIsOpen(true)}>
             <img src={Calender} alt="이동" />
             <CalenderText>달력 보기</CalenderText>
           </CalenderButton>
@@ -92,7 +95,31 @@ const ApplicationListPage = () => {
           <OutputButton>신청자 월별 액셀 출력</OutputButton>
         </ButtonBox>
       </TotalContainer>
-      <Footer/>
+      {isOpen && (
+        <ModalOverlay onClick={() => setIsOpen(false)}>
+          <ModalContainer onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ArrowButton>
+                <img src={ArrowLeft} alt="" />
+              </ArrowButton>
+              <MonthText>2025년 12월</MonthText>
+              <ArrowButton>
+                <img src={ArrowRight} alt="" />
+              </ArrowButton>
+              <CloseButton onClick={() => setIsOpen(false)}>
+                <img src={Close} alt="" />
+              </CloseButton>
+            </ModalHeader>
+
+            <Divider />
+
+            <CalendarBody>
+              
+            </CalendarBody>
+          </ModalContainer>
+        </ModalOverlay>
+      )}
+      <Footer />
     </Body>
   );
 };
@@ -196,9 +223,6 @@ const Th = styled.th`
   position: sticky; // 스크롤 시 고정
   top: 0; // 최상단 고정
   z-index: 10;
-
-  //position: sticky;
-  //top: 0;
 `;
 
 const Td = styled.td`
@@ -231,6 +255,69 @@ const OutputButton = styled.button`
   border: none;
   border-radius: 12px;
   background-color: #444f61;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  padding: 130px 0 0 440px;
+  z-index: 999;
+`;
+
+const ModalContainer = styled.div`
+  width: 320px;
+  height: 320px;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 20px;
+  font-weight: 600;
+`;
+
+const MonthText = styled.span`
+  margin: 0 16px;
+`;
+
+const ArrowButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 20px;
+  margin-top: 6px;
+  cursor: pointer;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+
+  img {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background: #e0e0e0;
+  margin: 16px 0 10px 0;
+`;
+
+const CalendarBody = styled.div`
+  min-height: 210px;
 `;
 
 export default ApplicationListPage;
