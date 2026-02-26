@@ -1,12 +1,10 @@
-'use client';
-
 import styled from "@emotion/styled";
 
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
-import ArrowLeft from "../../../src/assets/arrowLeft.svg";
-import ArrowRight from "../../../src/assets/arrowRight.svg";
+import ArrowLeft from "../../assets/arrowLeft.svg";
+import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
 
@@ -34,14 +32,14 @@ const HomePage = () => {
             <img src={ArrowRight || "/placeholder.svg"} alt="이후 날짜" />
           </YearNavigator>
 
-          <MealSelect defaultValue="석식">
-            <option value="석식">석식</option>
-            <option value="중식">중식</option>
-            <option value="조식">조식</option>
-          </MealSelect>
+          {/* ✅ MealSelect(드롭다운) → MealToggleGroup(토글 버튼)으로 교체 */}
+          <MealToggleGroup>
+            <MealToggleButton active={true}>중식</MealToggleButton>
+            <MealToggleButton active={false}>석식</MealToggleButton>
+          </MealToggleGroup>
 
           <LoginButton>
-            <img src={user} alt="이전 날짜" />
+            <img src={user} alt="유저 아이콘" />
             Login
           </LoginButton>
         </ControlRow>
@@ -78,12 +76,13 @@ const HomePage = () => {
           <ApplyButton>신청하기</ApplyButton>
         </ButtonBox>
       </TotalContainer>
-      
 
       <Footer />
     </Body>
   );
 };
+
+
 
 const Body = styled.div`
   width: 100vw;
@@ -119,23 +118,20 @@ const Years = styled.span`
   padding-bottom: 6px;
 `;
 
-const MealSelect = styled.select`
-  padding: 8px 16px;
-  padding-right: 50px; /* 화살표가 들어갈 공간 확보 */
-  font-size: 20px;
+const MealToggleGroup = styled.div`
+  display: flex;
   border: 1px solid #ccc;
   border-radius: 6px;
-  background-color: white;
+  overflow: hidden;
+`;
+
+const MealToggleButton = styled.button<{ active: boolean }>`
+  padding: 8px 16px;
+  font-size: 20px;
+  border: none;
   cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  
-  background-position: calc(100% - 16px) center; 
+  background-color: ${({ active }) => (active ? "#444f61" : "white")};
+  color: ${({ active }) => (active ? "white" : "#444f61")};
 `;
 
 const LoginButton = styled.button`
