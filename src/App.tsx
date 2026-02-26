@@ -5,6 +5,7 @@ import TeacherCreatePage from "./pages/admin/TeacherCreatePage";
 import ApplicationListPage from "./pages/admin/ApplicationListPage";
 import HomePage from "./pages/user/HomePage";
 import ApplicationReasonPage from "./pages/user/ApplicationReasonPage";
+import ApplicationTeacherPage from "./pages/user/ApplicationTeacherPage";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Route path="/get/apply" element={<ApplicationListPage />} />
       <Route path="/apply" element={<HomePage />} />
       <Route path="/apply/reason" element={<ApplicationReasonPage />} />
+      <Route path="/apply/teacher" element={<ApplicationTeacherPage />} />
     </Routes>
   );
 }
