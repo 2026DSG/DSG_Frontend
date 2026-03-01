@@ -8,6 +8,14 @@ import Footer from "../../components/Footer";
 const TeacherListPage = () => {
   const navigate = useNavigate();
 
+  const teachers = [
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+  ];
+
   return (
     <Body>
       <TotalContainer>
@@ -36,68 +44,22 @@ const TeacherListPage = () => {
             </Thead>
 
             <Tbody>
-              <Tr>
-                <Td>이동욱</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>
-                  <button>삭제</button>
-                </Td>
-              </Tr>
-
-              <Tr>
-                <Td>이동욱</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>
-                  <button>삭제</button>
-                </Td>
-              </Tr>
-
-              <Tr>
-                <Td>이동욱</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>
-                  <button>삭제</button>
-                </Td>
-              </Tr>
-
-              <Tr>
-                <Td>이동욱</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>
-                  <button>삭제</button>
-                </Td>
-              </Tr>
-
-              <Tr>
-                <Td>이동욱</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>
-                  <button>삭제</button>
-                </Td>
-              </Tr>
-
-              <Tr>
-                <Td>이동욱</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>
-                  <button>삭제</button>
-                </Td>
-              </Tr>
-
-              <Tr>
-                <Td>이동욱</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>
-                  <button>삭제</button>
-                </Td>
-              </Tr>
+              {teachers.length === 0 ? (
+                <Tr>
+                  <EmptyTd colSpan={4}>교직원이 존재하지 않습니다.</EmptyTd>
+                </Tr>
+              ) : (
+                teachers.map((teacher, index) => (
+                  <Tr key={index}>
+                    <Td>{teacher.name}</Td>
+                    <Td>{teacher.department}</Td>
+                    <Td>{teacher.position}</Td>
+                    <Td>
+                      <button>삭제</button>
+                    </Td>
+                  </Tr>
+                ))
+              )}
             </Tbody>
           </Table>
         </TableWrapper>
@@ -113,6 +75,14 @@ const TeacherListPage = () => {
     </Body>
   );
 };
+
+const EmptyTd = styled.td`
+  padding: 150px 0;
+  font-size: 24px;
+  text-align: center;
+  color: #888;
+  background-color: white;
+`;
 
 const Body = styled.div`
   width: 100vw;
@@ -166,14 +136,13 @@ const TableWrapper = styled.div`
   margin-top: 21px;
   max-height: 400px;
   overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 6, 0.2);
 `;
 
 const Table = styled.table`
   width: 100%;
-  //border-collapse: collapse;
   border-collapse: separate;
   border-spacing: 0;
-  //border-radius: 6px;
 `;
 
 const Thead = styled.thead`
@@ -211,9 +180,6 @@ const Th = styled.th`
   position: sticky; // 스크롤 시 고정
   top: 0; // 최상단 고정
   z-index: 10;
-
-  //position: sticky;
-  //top: 0;
 `;
 
 const Td = styled.td`
