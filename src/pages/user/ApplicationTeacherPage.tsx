@@ -297,8 +297,8 @@ const SearchInputWrapper = styled.div`
   display: flex;
   align-items: center;
   border: 1px solid #e5e5e5;
-  border-radius: 20px;
-  padding: 10px 18px;
+  border-radius: 50px;
+  padding: 12px 18px;
   background-color: #fcfcfc;
 `;
 
@@ -335,10 +335,10 @@ const KeyButton = styled.button`
 
 const TableSection = styled.div`
   flex: 1;
-  max-width: 580px;
 `;
 
 const TableWrapper = styled.div`
+  margin-top: 10px;
   height: 376px;
   overflow-y: scroll;
   border: 1px solid #e5e5e5;
