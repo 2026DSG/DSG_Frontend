@@ -14,7 +14,6 @@ const teacherData = [
   { id: 5, name: "김수아", department: "부서" },
   { id: 6, name: "김민서", department: "부서" },
   { id: 7, name: "이지은", department: "부서" },
-
 ];
 
 const KEYBOARD_ROWS = [
@@ -28,9 +27,8 @@ const KEYBOARD_ROWS = [
 const ApplicationTeacherPage = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  // 전 페이지 선택지에 따라 바뀌는 텍스트 변수 (퍼블리싱 단계 예시)
-  const selectedMeal = "석식"; // 조식 / 중식 / 석식 중 선택된 값
-  const selectedType = "초과근무"; // 초과근무 / 개인부담 중 선택된 값
+  const selectedMeal = "석식";
+  const selectedType = "초과근무";
 
   return (
     <Body>
@@ -39,14 +37,12 @@ const ApplicationTeacherPage = () => {
           <Header title="교직원 선택" />
 
           <TabContainer>
-            {/* 전 페이지 선택지 2개가 모두 표시됨 */}
             <TabButton active={true}>{selectedMeal}</TabButton>
             <Divider>|</Divider>
             <TabButton active={false}>{selectedType}</TabButton>
           </TabContainer>
 
           <MainContent>
-            {/* 왼쪽: 검색 영역 */}
             <SearchSection>
               <SearchInputWrapper>
                 <StyledInput
@@ -61,16 +57,13 @@ const ApplicationTeacherPage = () => {
                 {KEYBOARD_ROWS.map((row, rowIdx) => (
                   <KeyboardRow key={rowIdx}>
                     {row.map((key) => (
-                      <KeyButton key={key}>
-                        {key}
-                      </KeyButton>
+                      <KeyButton key={key}>{key}</KeyButton>
                     ))}
                   </KeyboardRow>
                 ))}
               </KeyboardContainer>
             </SearchSection>
 
-            {/* 오른쪽: 리스트 영역 */}
             <TableSection>
               <TableWrapper>
                 <Table>
@@ -82,9 +75,9 @@ const ApplicationTeacherPage = () => {
                   </Thead>
                   <Tbody>
                     {teacherData.map((teacher) => (
-                      <Tr 
-                        key={teacher.id} 
-                        isSelected={selectedId === teacher.id} 
+                      <Tr
+                        key={teacher.id}
+                        isSelected={selectedId === teacher.id}
                         onClick={() => setSelectedId(teacher.id)}
                       >
                         <Td>{teacher.name}</Td>
@@ -109,19 +102,13 @@ const ApplicationTeacherPage = () => {
   );
 };
 
-
-
-
-
-
 const Body = styled.div`
-  width: 1280px;
-  height: 768px;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
   overflow: hidden;
-  margin: 0 auto;
 `;
 
 const ContentWrapper = styled.div`
@@ -131,7 +118,7 @@ const ContentWrapper = styled.div`
 const TotalContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin: 0px 100px;
+  margin: 0px 120px;
 `;
 
 const TabContainer = styled.div`
@@ -140,11 +127,11 @@ const TabContainer = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 16px;
-    margin-right: 78px;
+  margin-right: 0px;
 `;
 
 const TabButton = styled.span<{ active: boolean }>`
-  font-size:18px;
+  font-size: 18px;
   font-weight: 400;
   color: #000000;
 `;
@@ -211,8 +198,8 @@ const TableSection = styled.div`
 `;
 
 const TableWrapper = styled.div`
-  height: 376px; 
-  overflow-y: scroll; 
+  height: 376px;
+  overflow-y: scroll;
   border: 1px solid #e5e5e5;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
