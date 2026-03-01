@@ -145,7 +145,7 @@ const HomePage = () => {
 
   
   const handleApplyClick = (): void => {
-    navigate(`/apply?meal=${encodeURIComponent(mealType)}&date=${toDateParam(currentDate)}`);
+    navigate(`/apply/reason?meal=${encodeURIComponent(mealType)}&date=${toDateParam(currentDate)}`);
   };
   
 
