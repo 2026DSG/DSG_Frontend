@@ -1,10 +1,56 @@
 'use client';
 
 import styled from "@emotion/styled";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
+
+type MealType = '중식' | '석식';
+type ReasonType = '초과근무' | '개인부담';
+
+const getDefaultMealType = (): MealType => {
+  const now = new Date();
+  const totalMinute = now.getHours() * 60 + now.getMinutes();
+  if (totalMinute >= 13 * 60 + 30) return '석식';
+  return '중식';
+};
+
+
 const ApplicationReasonPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const dateParam =
+    searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [mealType, setMealType] = useState<MealType>(
+    (searchParams.get("meal") as MealType) ?? getDefaultMealType()
+  );
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleReasonSelect = (reason: ReasonType) => {
+    navigate(
+      `/apply/teacher?meal=${encodeURIComponent(mealType)}&reason=${encodeURIComponent(reason)}&date=${dateParam}`
+    );
+  };
+
+
+
+
   return (
     <Body>
       <TotalContainer>
@@ -12,22 +58,32 @@ const ApplicationReasonPage = () => {
 
         <ContentWrapper>
           <TopRow>
-            <TimeDisplay>18:34</TimeDisplay>
-            <MealTypeText>석식</MealTypeText>
+            <TimeDisplay>{currentTime}</TimeDisplay>
+            <MealTypeText>{mealType}</MealTypeText>
             <MealToggleGroup>
-            <MealToggleButton active={true}>중식</MealToggleButton>
-            <MealToggleButton active={false}>석식</MealToggleButton>
-          </MealToggleGroup>
+              {(['중식', '석식'] as MealType[]).map((meal) => (
+                <MealToggleButton
+                  key={meal}
+                  active={mealType === meal}
+                  onClick={() => setMealType(meal)}
+                >
+                  {meal}
+                </MealToggleButton>
+              ))}
+            </MealToggleGroup>
           </TopRow>
 
           <ButtonContainer>
-            <ReasonButton>초과근무</ReasonButton>
-            <ReasonButton>개인부담</ReasonButton>
+            <ReasonButton onClick={() => handleReasonSelect('초과근무')}>
+              초과근무
+            </ReasonButton>
+            <ReasonButton onClick={() => handleReasonSelect('개인부담')}>
+              개인부담
+            </ReasonButton>
           </ButtonContainer>
         </ContentWrapper>
       </TotalContainer>
 
-      {/* 푸터 추가 */}
       <Footer />
     </Body>
   );
@@ -104,6 +160,6 @@ const ReasonButton = styled.button`
   border: none;
   border-radius: 12px;
   cursor: pointer;
-`;
+  `;
 
 export default ApplicationReasonPage;
