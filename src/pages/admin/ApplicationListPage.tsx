@@ -20,6 +20,51 @@ const ApplicationListPage = () => {
     return `${y} / ${m} / ${d}`;
   };
 
+  const applicant = [
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+  ];
+
   return (
     <Body>
       <TotalContainer>
@@ -49,55 +94,21 @@ const ApplicationListPage = () => {
             </Thead>
 
             <Tbody>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
+              {applicant.length === 0 ? (
+                <Tr>
+                  <EmptyTd colSpan={5}>신청자가 존재하지 않습니다.</EmptyTd>
+                </Tr>
+              ) : (
+                applicant.map((applicant, index) => (
+                  <Tr key={index}>
+                    <Td>{applicant.meal}</Td>
+                    <Td>{applicant.name}</Td>
+                    <Td>{applicant.department}</Td>
+                    <Td>{applicant.position}</Td>
+                    <Td>{applicant.reason}</Td>
+                  </Tr>
+                ))
+              )}
             </Tbody>
           </Table>
         </TableWrapper>
@@ -189,6 +200,7 @@ const TableWrapper = styled.div`
   margin-top: 21px;
   max-height: 400px;
   overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 6, 0.2);
 `;
 
 const Table = styled.table`
@@ -213,6 +225,14 @@ const Tbody = styled.tbody`
 `;
 
 const Tr = styled.tr``;
+
+const EmptyTd = styled.td`
+  padding: 150px 0;
+  font-size: 24px;
+  text-align: center;
+  color: #888;
+  background-color: white;
+`;
 
 const Th = styled.th`
   background-color: #444f61;
@@ -333,7 +353,6 @@ const StyledCalendar = styled(Calendar)`
   .react-calendar__month-view__weekdays__weekday abbr {
     text-decoration: none;
   }
-
 
   .react-calendar__month-view__days__day--weekend:nth-of-type(7n) abbr {
     color: #2e7af2;
