@@ -1,20 +1,70 @@
 "use client";
 
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SearchIcon from "../../assets/Search.svg";
 
-const teacherData = [
-  { id: 1, name: "권수현", department: "부서" },
-  { id: 2, name: "강세아", department: "부서" },
-  { id: 3, name: "김하연", department: "부서" },
-  { id: 4, name: "최하은", department: "부서" },
-  { id: 5, name: "김수아", department: "부서" },
-  { id: 6, name: "김민서", department: "부서" },
-  { id: 7, name: "이지은", department: "부서" },
-];
+
+
+interface Teacher {
+  id: number;
+  name: string;
+  department: string;
+  position: string;
+  number: number;
+  createdAt: string;
+}
+
+type MealType = "중식" | "석식";
+type ReasonType = "초과근무" | "개인부담";
+
+
+const CHOSUNG_LIST = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+
+const getChosung = (char: string): string => {
+  const code = char.charCodeAt(0) - 0xac00;
+  if (code < 0 || code > 11171) return char;
+  return CHOSUNG_LIST[Math.floor(code / (21 * 28))];
+};
+
+const matchesChosung = (name: string, query: string): boolean => {
+  if (!query) return true;
+  for (let i = 0; i < query.length; i++) {
+    if (i >= name.length) return false;
+    if (getChosung(name[i]) !== query[i]) return false;
+  }
+  return true;
+};
+
+
+
+
+/**교직원 전체 목록 조회 */
+const fetchTeachers = async (): Promise<Teacher[]> => {
+  const response = await fetch("/teacher");
+  if (!response.ok) throw new Error("교직원 목록 조회 실패");
+  return response.json() as Promise<Teacher[]>;
+};
+
+/** POST /meals - 급식 신청 생성 */
+const postMealApplication = async (body: {
+  teacherId: number;
+  meal: MealType;
+  reason: ReasonType;
+  date: string;
+}): Promise<void> => {
+  const response = await fetch("/meals", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error("신청 실패");
+};
+
+
 
 const KEYBOARD_ROWS = [
   ["ㄱ", "ㄴ", "ㄷ"],
@@ -24,22 +74,88 @@ const KEYBOARD_ROWS = [
   ["ㅍ", "ㅎ", "←"],
 ];
 
-const ApplicationTeacherPage = () => {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const selectedMeal = "석식";
-  const selectedType = "초과근무";
+
+const ApplicationTeacherPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const mealParam = (searchParams.get("meal") ?? "석식") as MealType;
+  const reasonParam = (searchParams.get("reason") ?? "초과근무") as ReasonType;
+  const dateParam =
+    searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [chosungQuery, setChosungQuery] = useState<string>("");
+
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await fetchTeachers();
+        setTeachers(data);
+      } catch {
+        setError("교직원 목록을 불러오지 못했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const filteredTeachers = useMemo(
+    () => teachers.filter((t) => matchesChosung(t.name, chosungQuery)),
+    [teachers, chosungQuery]
+  );
+
+  // ── 초성 키보드 입력 처리
+  const handleKeyPress = (key: string) => {
+    if (key === "←") {
+      setChosungQuery((prev) => prev.slice(0, -1));
+    } else {
+      setChosungQuery((prev) => prev + key);
+    }
+    setSelectedId(null);
+  };
+
+
+  //신청/ POST 후 홈으로 이동
+  const handleApply = async () => {
+    if (selectedId === null || isSubmitting) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await postMealApplication({
+        teacherId: selectedId,
+        meal: mealParam,
+        reason: reasonParam,
+        date: dateParam,
+      });
+      // 홈으로 복귀 → 홈에서 신청 리스트 재조회
+      navigate("/");
+    } catch {
+      setError("신청에 실패했습니다. 다시 시도해주세요.");
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Body>
       <ContentWrapper>
         <TotalContainer>
-          <Header title="교직원 선택"  showBack />
+          <Header title="교직원 선택" showBack />
 
           <TabContainer>
-            <TabButton active={true}>{selectedMeal}</TabButton>
+            <TabButton active={true}>{mealParam}</TabButton>
             <Divider>|</Divider>
-            <TabButton active={false}>{selectedType}</TabButton>
+            <TabButton active={false}>{reasonParam}</TabButton>
           </TabContainer>
 
           <MainContent>
@@ -49,6 +165,7 @@ const ApplicationTeacherPage = () => {
                   type="text"
                   readOnly
                   placeholder="초성으로 검색해주세요."
+                  value={chosungQuery}
                 />
                 <img src={SearchIcon} alt="search" width={20} height={20} />
               </SearchInputWrapper>
@@ -57,7 +174,9 @@ const ApplicationTeacherPage = () => {
                 {KEYBOARD_ROWS.map((row, rowIdx) => (
                   <KeyboardRow key={rowIdx}>
                     {row.map((key) => (
-                      <KeyButton key={key}>{key}</KeyButton>
+                      <KeyButton key={key} onClick={() => handleKeyPress(key)}>
+                        {key}
+                      </KeyButton>
                     ))}
                   </KeyboardRow>
                 ))}
@@ -74,23 +193,42 @@ const ApplicationTeacherPage = () => {
                     </tr>
                   </Thead>
                   <Tbody>
-                    {teacherData.map((teacher) => (
-                      <Tr
-                        key={teacher.id}
-                        isSelected={selectedId === teacher.id}
-                        onClick={() => setSelectedId(teacher.id)}
-                      >
-                        <Td>{teacher.name}</Td>
-                        <Td>{teacher.department}</Td>
-                      </Tr>
-                    ))}
+                    {isLoading && (
+                      <tr>
+                        <StatusTd colSpan={2}>불러오는 중...</StatusTd>
+                      </tr>
+                    )}
+
+                    {!isLoading && filteredTeachers.length === 0 && (
+                      <tr>
+                        <StatusTd colSpan={2}>검색 결과가 없습니다.</StatusTd>
+                      </tr>
+                    )}
+
+                    {!isLoading &&
+                      filteredTeachers.map((teacher) => (
+                        <Tr
+                          key={teacher.id}
+                          isSelected={selectedId === teacher.id}
+                          onClick={() => setSelectedId(teacher.id)}
+                        >
+                          <Td>{teacher.name}</Td>
+                          <Td>{teacher.department}</Td>
+                        </Tr>
+                      ))}
                   </Tbody>
                 </Table>
               </TableWrapper>
 
+              {error && <ErrorText>{error}</ErrorText>}
+
               <ButtonBox>
-                <ApplyButton active={selectedId !== null} disabled={selectedId === null}>
-                  신청하기
+                <ApplyButton
+                  active={selectedId !== null}
+                  disabled={selectedId === null || isSubmitting}
+                  onClick={handleApply}
+                >
+                  {isSubmitting ? "신청 중..." : "신청하기"}
                 </ApplyButton>
               </ButtonBox>
             </TableSection>
@@ -101,6 +239,9 @@ const ApplicationTeacherPage = () => {
     </Body>
   );
 };
+
+
+
 
 const Body = styled.div`
   width: 100vw;
@@ -230,8 +371,12 @@ const Th = styled.th`
   padding: 15px;
   font-size: 22px;
   border-bottom: 2px solid #ccc;
-  &:first-of-type { border-top-left-radius: 6px; }
-  &:last-of-type { border-top-right-radius: 6px; }
+  &:first-of-type {
+    border-top-left-radius: 6px;
+  }
+  &:last-of-type {
+    border-top-right-radius: 6px;
+  }
 `;
 
 const Tbody = styled.tbody`
@@ -255,7 +400,23 @@ const Td = styled.td`
   font-size: 22px;
   text-align: center;
   border-right: 1px solid #e0e0e0;
-  &:last-child { border-right: none; }
+  &:last-child {
+    border-right: none;
+  }
+`;
+
+const StatusTd = styled.td`
+  padding: 40px;
+  font-size: 18px;
+  text-align: center;
+  color: #888;
+`;
+
+const ErrorText = styled.p`
+  color: #e74c3c;
+  font-size: 14px;
+  text-align: center;
+  margin: 8px 0 0;
 `;
 
 const ButtonBox = styled.div`
