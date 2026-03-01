@@ -34,7 +34,7 @@ const ApplicationTeacherPage = () => {
     <Body>
       <ContentWrapper>
         <TotalContainer>
-          <Header title="교직원 선택" />
+          <Header title="교직원 선택"  showBack />
 
           <TabContainer>
             <TabButton active={true}>{selectedMeal}</TabButton>
