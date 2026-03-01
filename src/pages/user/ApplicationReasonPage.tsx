@@ -1,10 +1,56 @@
 'use client';
 
 import styled from "@emotion/styled";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
+
+type MealType = '중식' | '석식';
+type ReasonType = '초과근무' | '개인부담';
+
+const getDefaultMealType = (): MealType => {
+  const now = new Date();
+  const totalMinute = now.getHours() * 60 + now.getMinutes();
+  if (totalMinute >= 13 * 60 + 30) return '석식';
+  return '중식';
+};
+
+
 const ApplicationReasonPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const dateParam =
+    searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [mealType, setMealType] = useState<MealType>(
+    (searchParams.get("meal") as MealType) ?? getDefaultMealType()
+  );
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleReasonSelect = (reason: ReasonType) => {
+    navigate(
+      `/apply/teacher?meal=${encodeURIComponent(mealType)}&reason=${encodeURIComponent(reason)}&date=${dateParam}`
+    );
+  };
+
+
+
+
   return (
     <Body>
       <TotalContainer>
@@ -12,23 +58,32 @@ const ApplicationReasonPage = () => {
 
         <ContentWrapper>
           <TopRow>
-            <TimeDisplay>18:34</TimeDisplay>
-            <MealTypeText>석식</MealTypeText>
-            <MealSelect defaultValue="석식">
-              <option value="석식">석식</option>
-              <option value="중식">중식</option>
-              <option value="조식">조식</option>
-            </MealSelect>
+            <TimeDisplay>{currentTime}</TimeDisplay>
+            <MealTypeText>{mealType}</MealTypeText>
+            <MealToggleGroup>
+              {(['중식', '석식'] as MealType[]).map((meal) => (
+                <MealToggleButton
+                  key={meal}
+                  active={mealType === meal}
+                  onClick={() => setMealType(meal)}
+                >
+                  {meal}
+                </MealToggleButton>
+              ))}
+            </MealToggleGroup>
           </TopRow>
 
           <ButtonContainer>
-            <ReasonButton>초과근무</ReasonButton>
-            <ReasonButton>개인부담</ReasonButton>
+            <ReasonButton onClick={() => handleReasonSelect('초과근무')}>
+              초과근무
+            </ReasonButton>
+            <ReasonButton onClick={() => handleReasonSelect('개인부담')}>
+              개인부담
+            </ReasonButton>
           </ButtonContainer>
         </ContentWrapper>
       </TotalContainer>
 
-      {/* 푸터 추가 */}
       <Footer />
     </Body>
   );
@@ -73,24 +128,20 @@ const MealTypeText = styled.h1`
   margin: 0;
 `;
 
-
-const MealSelect = styled.select`
-  padding: 8px 16px;
-  padding-right: 50px; /* 화살표가 들어갈 공간 확보 */
-  font-size: 20px;
+const MealToggleGroup = styled.div`
+  display: flex;
   border: 1px solid #ccc;
   border-radius: 6px;
-  background-color: white;
+  overflow: hidden;
+`;
+
+const MealToggleButton = styled.button<{ active: boolean }>`
+  padding: 8px 16px;
+  font-size: 20px;
+  border: none;
   cursor: pointer;
-
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  
-  background-position: calc(100% - 16px) center; 
+  background-color: ${({ active }) => (active ? "#444f61" : "white")};
+  color: ${({ active }) => (active ? "white" : "#444f61")};
 `;
 
 const ButtonContainer = styled.div`
@@ -109,6 +160,6 @@ const ReasonButton = styled.button`
   border: none;
   border-radius: 12px;
   cursor: pointer;
-`;
+  `;
 
 export default ApplicationReasonPage;
