@@ -13,7 +13,7 @@ function App() {
       <Route path="/get/teacher" element={<TeacherListPage />} />
       <Route path="/post/teacher" element={<TeacherCreatePage />} />
       <Route path="/get/apply" element={<ApplicationListPage />} />
-      <Route path="/apply" element={<HomePage />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/apply/reason" element={<ApplicationReasonPage />} />
       <Route path="/apply/teacher" element={<ApplicationTeacherPage />} />
     </Routes>

@@ -1,47 +1,203 @@
 'use client';
 
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
-import ArrowLeft from "../../../src/assets/arrowLeft.svg";
-import ArrowRight from "../../../src/assets/arrowRight.svg";
+import ArrowLeft from "../../assets/arrowLeft.svg";
+import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
 
-const initialData = [
-  { id: 1, name: "권수현", reason: "개인부담", department: "부서", position: "교직원" },
-  { id: 2, name: "강세아", reason: "초과근무", department: "부서", position: "교직원" },
-  { id: 3, name: "권수현", reason: "개인부담", department: "부서", position: "교직원" },
-  { id: 4, name: "강세아", reason: "초과근무", department: "부서", position: "교직원" },
-  { id: 5, name: "권수현", reason: "개인부담", department: "부서", position: "교직원" },
-  { id: 6, name: "강세아", reason: "초과근무", department: "부서", position: "교직원" },
-  { id: 7, name: "권수현", reason: "개인부담", department: "부서", position: "교직원" },
-];
+
+type MealType = "중식" | "석식";
+
+// 토스트 알림..
+type ToastType = "success" | "error";
+interface Toast {
+  text: string;
+  type: ToastType;
+}
+
+interface MealItem {
+  id: number;
+  name: string;
+  reason: string;
+  department: string;
+  position: string;
+}
+
+
+
+// 2025 / 12 / 19 형식으로 변환
+const formatDate = (date: Date): string => {
+  const year  = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day   = String(date.getDate()).padStart(2, "0");
+  return `${year} / ${month} / ${day}`;
+};
+
+//(API 요청용) 2025-12-19 형식 변환
+const toDateParam = (date: Date): string => {
+  const year  = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day   = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+// 13:30 이후석식 그외 중식
+const getDefaultMealType = (): MealType => {
+  const now         = new Date();
+  const totalMinute = now.getHours() * 60 + now.getMinutes();
+  if (totalMinute >= 13 * 60 + 30) return "석식";
+  return "중식";
+};
+
+
+
+// GET /meals?date=2025-12-19&meal=석식
+//신청 목록을 가져오기
+const getMealList = async (date: string, meal: MealType): Promise<MealItem[]> => {
+  const response = await fetch(`/meals?date=${date}&meal=${encodeURIComponent(meal)}`);
+  if (!response.ok) throw new Error("목록 조회 실패");
+  return response.json() as Promise<MealItem[]>;
+};
+
+// DELETE /meals/:id
+// 해당 항목 삭제
+const deleteMealById = async (id: number): Promise<void> => {
+  const response = await fetch(`/meals/${id}`, { method: "DELETE" });
+  if (!response.ok) throw new Error("삭제 실패");
+};
+
+
+
 
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [mealType, setMealType] = useState<MealType>(getDefaultMealType);
+  const [mealList, setMealList] = useState<MealItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+
+
+  // 날짜,급식 종류가 바뀔 때 다시 조회
+  useEffect(() => {
+    const loadData = async (): Promise<void> => {
+      setIsLoading(true);
+      try {
+        const data = await getMealList(toDateParam(currentDate), mealType);
+        setMealList(data);
+      } catch {
+        showToast("데이터를 불러오지 못했습니다.", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [currentDate, mealType]);
+
+
+  const showToast = (text: string, type: ToastType): void => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+
+  const handleDateChange = (step: number): void => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setDate(newDate.getDate() + step);
+      return newDate;
+    });
+  };
+
+
+
+
+  const handleDeleteClick = (id: number): void => {
+    setDeletingId(id);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    if (deletingId === null) return;
+
+    try {
+      await deleteMealById(deletingId);
+      setMealList((prev) => prev.filter((item) => item.id !== deletingId));
+      showToast("삭제되었습니다.", "success");
+    } catch {
+      showToast("삭제에 실패했습니다.", "error");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+
+
+  
+  const handleApplyClick = (): void => {
+    navigate(`/apply?meal=${encodeURIComponent(mealType)}&date=${toDateParam(currentDate)}`);
+  };
+  
+
+
   return (
     <Body>
+
+      {/* 토스트 알림 */}
+      {toast !== null && (
+        <ToastMessage type={toast.type}>{toast.text}</ToastMessage>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {deletingId !== null && (
+        <ModalOverlay>
+          <ModalBox>
+            <ModalMessage>정말 삭제하시겠습니까?</ModalMessage>
+            <ModalButtons>
+              <CancelButton onClick={() => setDeletingId(null)}>취소</CancelButton>
+              <ConfirmDeleteButton onClick={handleDeleteConfirm}>삭제</ConfirmDeleteButton>
+            </ModalButtons>
+          </ModalBox>
+        </ModalOverlay>
+      )}
+
       <TotalContainer>
         <Header title="메인페이지" />
 
         <ControlRow>
           <YearNavigator>
-            <img src={ArrowLeft || "/placeholder.svg"} alt="이전 날짜" />
-            <Years>2025 / 12 / 19</Years>
-            <img src={ArrowRight || "/placeholder.svg"} alt="이후 날짜" />
+            <img src={ArrowLeft as string} alt="이전 날짜" onClick={() => handleDateChange(-1)} />
+            <Years>{formatDate(currentDate)}</Years>
+            <img src={ArrowRight as string} alt="이후 날짜" onClick={() => handleDateChange(1)} />
           </YearNavigator>
 
-          <MealSelect defaultValue="석식">
-            <option value="석식">석식</option>
-            <option value="중식">중식</option>
-            <option value="조식">조식</option>
-          </MealSelect>
+          <MealToggleGroup>
+            <MealToggleButton
+              active={mealType === "중식"}
+              onClick={() => setMealType("중식")}
+            >
+              중식
+            </MealToggleButton>
+            <MealToggleButton
+              active={mealType === "석식"}
+              onClick={() => setMealType("석식")}
+            >
+              석식
+            </MealToggleButton>
+          </MealToggleGroup>
 
           <LoginButton>
-            <img src={user} alt="이전 날짜" />
+            <img src={user as string} alt="유저 아이콘" />
             Login
           </LoginButton>
         </ControlRow>
@@ -59,14 +215,20 @@ const HomePage = () => {
             </Thead>
 
             <Tbody>
-              {initialData.map((item) => (
+
+              {/* 데이터 없음 */}
+              {!isLoading && mealList.length === 0 && (
+                <Tr><EmptyTd colSpan={5}>신청 내역이 없습니다.</EmptyTd></Tr>
+              )}
+
+              {!isLoading && mealList.map((item: MealItem) => (
                 <Tr key={item.id}>
                   <Td>{item.name}</Td>
                   <Td>{item.reason}</Td>
                   <Td>{item.department}</Td>
                   <Td>{item.position}</Td>
                   <Td>
-                    <DeleteButton>삭제</DeleteButton>
+                    <DeleteButton onClick={() => handleDeleteClick(item.id)}>삭제</DeleteButton>
                   </Td>
                 </Tr>
               ))}
@@ -75,15 +237,28 @@ const HomePage = () => {
         </TableWrapper>
 
         <ButtonBox>
-          <ApplyButton>신청하기</ApplyButton>
+          <ApplyButton onClick={handleApplyClick}>신청하기</ApplyButton>
         </ButtonBox>
       </TotalContainer>
-      
 
       <Footer />
     </Body>
   );
 };
+
+
+
+
+
+interface MealToggleButtonProps {
+  active: boolean;
+}
+interface ToastMessageProps {
+  type: ToastType;
+}
+
+
+
 
 const Body = styled.div`
   width: 100vw;
@@ -119,23 +294,22 @@ const Years = styled.span`
   padding-bottom: 6px;
 `;
 
-const MealSelect = styled.select`
-  padding: 8px 16px;
-  padding-right: 50px; /* 화살표가 들어갈 공간 확보 */
-  font-size: 20px;
+
+const MealToggleGroup = styled.div`
+  display: flex;
   border: 1px solid #ccc;
   border-radius: 6px;
-  background-color: white;
+  overflow: hidden;
+`;
+
+const MealToggleButton = styled.button<MealToggleButtonProps>`
+  padding: 8px 16px;
+  font-size: 20px;
+  border: none;
   cursor: pointer;
 
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  
-  background-position: calc(100% - 16px) center; 
+  background-color: ${({ active }) => (active ? "#444f61" : "white")};
+  color:            ${({ active }) => (active ? "white"   : "#444f61")};
 `;
 
 const LoginButton = styled.button`
@@ -211,6 +385,13 @@ const Td = styled.td`
   }
 `;
 
+const EmptyTd = styled.td`
+  padding: 40px;
+  font-size: 18px;
+  text-align: center;
+  color: #888;
+`;
+
 const DeleteButton = styled.button`
   font-size: 20px;
   padding: 5px 29px;
@@ -234,6 +415,73 @@ const ApplyButton = styled.button`
   border: none;
   border-radius: 12px;
   background-color: #444f61;
+  cursor: pointer;
+`;
+
+/*토스트~~~*/
+const ToastMessage = styled.div<ToastMessageProps>`
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 16px 28px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background-color: ${({ type }) => (type === "success" ? "#27ae60" : "#e74c3c")};
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+`;
+
+/*삭제 확인 모달*/
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+`;
+
+const ModalBox = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 36px 48px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+`;
+
+const ModalMessage = styled.p`
+  font-size: 22px;
+  color: #222;
+  margin: 0 0 28px;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+`;
+
+const CancelButton = styled.button`
+  padding: 12px 36px;
+  font-size: 18px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  color: #444;
+  cursor: pointer;
+`;
+
+const ConfirmDeleteButton = styled.button`
+  padding: 12px 36px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  background: #444f61;
+  color: white;
   cursor: pointer;
 `;
 
