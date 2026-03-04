@@ -27,7 +27,7 @@ const TeacherListPage = () => {
             <img src={ArrowRight} alt="이후 연도" />
           </YearNavigator>
 
-          <ApplicantListButton onClick={() => navigate("/get/apply")}>
+          <ApplicantListButton onClick={() => navigate("/admin/apply")}>
             <ApplicantListText>신청자 리스트</ApplicantListText>
             <img src={ArrowRight} alt="이동" />
           </ApplicantListButton>
