@@ -115,6 +115,7 @@ const ApplicationListPage = () => {
 
         <ButtonBox>
           <OutputButton>신청자 월별 액셀 출력</OutputButton>
+          <OutputButton>총괄표 출력</OutputButton>
         </ButtonBox>
       </TotalContainer>
       {isOpen && (
@@ -277,6 +278,7 @@ const ButtonBox = styled.div`
 `;
 
 const OutputButton = styled.button`
+  width: 340px;
   padding: 20px 24px;
   font-size: 32px;
   color: white;
