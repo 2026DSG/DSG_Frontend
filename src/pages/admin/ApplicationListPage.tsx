@@ -20,6 +20,30 @@ const ApplicationListPage = () => {
     return `${y} / ${m} / ${d}`;
   };
 
+  const goToPrevDay = () => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 1);
+      return d;
+    });
+  };
+
+  const goToNextDay = () => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 1);
+      return d;
+    });
+  };
+
+  type applicant = {
+    name: string;
+    department: string;
+    position: string;
+    reason: string;
+    meal: string;
+  };
+
   const applicant = [
     {
       name: "이동욱",
@@ -71,9 +95,9 @@ const ApplicationListPage = () => {
         <Header title="신청자리스트" showBack />
         <UpsideBox>
           <YearNavigator>
-            <img src={ArrowLeft} alt="이전 날짜" />
+            <img src={ArrowLeft} onClick={goToPrevDay} alt="이전 날짜" />
             <Years>{formatDate(selectedDate)}</Years>
-            <img src={ArrowRight} alt="이후 날짜" />
+            <img src={ArrowRight} onClick={goToNextDay} alt="이후 날짜" />
           </YearNavigator>
 
           <CalenderButton onClick={() => setIsOpen(true)}>
@@ -128,7 +152,10 @@ const ApplicationListPage = () => {
             />
             <StyledCalendar
               value={selectedDate}
-              onChange={(date) => setSelectedDate(date as Date)}
+              onChange={(date) => {
+                setSelectedDate(date as Date);
+                setIsOpen(false);
+              }}
               calendarType="gregory"
               view="month"
               prev2Label={null}
