@@ -12,8 +12,8 @@ import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
 
-
-type MealType = "중식" | "석식";
+// ✅ 백엔드 enum과 정확히 일치하도록 수정
+type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 
 // 토스트 알림..
 type ToastType = "success" | "error";
@@ -48,26 +48,24 @@ const toDateParam = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// 13:30 이후석식 그외 중식
+// ✅ 13:30 이후 DINNER, 그외 LUNCH
 const getDefaultMealType = (): MealType => {
   const now         = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
-  if (totalMinute >= 13 * 60 + 30) return "석식";
-  return "중식";
+  if (totalMinute >= 13 * 60 + 30) return "DINNER";
+  return "LUNCH";
 };
 
 
 
-// GET /meals?date=2025-12-19&meal=석식
-//신청 목록을 가져오기
+// GET /meals?date=2025-12-19&meal=LUNCH
 const getMealList = async (date: string, meal: MealType): Promise<MealItem[]> => {
-  const response = await fetch(`/meals?date=${date}&meal=${encodeURIComponent(meal)}`);
+  const response = await fetch(`/meals?date=${date}&meal=${meal}`);
   if (!response.ok) throw new Error("목록 조회 실패");
   return response.json() as Promise<MealItem[]>;
 };
 
 // DELETE /meals/:id
-// 해당 항목 삭제
 const deleteMealById = async (id: number): Promise<void> => {
   const response = await fetch(`/meals/${id}`, { method: "DELETE" });
   if (!response.ok) throw new Error("삭제 실패");
@@ -88,7 +86,6 @@ const HomePage = () => {
   const [toast, setToast] = useState<Toast | null>(null);
 
 
-  // 날짜,급식 종류가 바뀔 때 다시 조회
   useEffect(() => {
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
@@ -121,8 +118,6 @@ const HomePage = () => {
   };
 
 
-
-
   const handleDeleteClick = (id: number): void => {
     setDeletingId(id);
   };
@@ -142,23 +137,18 @@ const HomePage = () => {
   };
 
 
-
-  
   const handleApplyClick = (): void => {
-    navigate(`/apply/reason?meal=${encodeURIComponent(mealType)}&date=${toDateParam(currentDate)}`);
+    navigate(`/apply/reason?meal=${mealType}&date=${toDateParam(currentDate)}`);
   };
-  
 
 
   return (
     <Body>
 
-      {/* 토스트 알림 */}
       {toast !== null && (
         <ToastMessage type={toast.type}>{toast.text}</ToastMessage>
       )}
 
-      {/* 삭제 확인 모달 */}
       {deletingId !== null && (
         <ModalOverlay>
           <ModalBox>
@@ -182,15 +172,16 @@ const HomePage = () => {
           </YearNavigator>
 
           <MealToggleGroup>
+            {/* ✅ 학교부담 기준으로 기본 토글 */}
             <MealToggleButton
-              active={mealType === "중식"}
-              onClick={() => setMealType("중식")}
+              active={mealType === "LUNCH"}
+              onClick={() => setMealType("LUNCH")}
             >
               중식
             </MealToggleButton>
             <MealToggleButton
-              active={mealType === "석식"}
-              onClick={() => setMealType("석식")}
+              active={mealType === "DINNER"}
+              onClick={() => setMealType("DINNER")}
             >
               석식
             </MealToggleButton>
@@ -215,8 +206,6 @@ const HomePage = () => {
             </Thead>
 
             <Tbody>
-
-              {/* 데이터 없음 */}
               {!isLoading && mealList.length === 0 && (
                 <Tr><EmptyTd colSpan={5}>신청 내역이 없습니다.</EmptyTd></Tr>
               )}
@@ -259,7 +248,6 @@ interface ToastMessageProps {
 
 
 
-
 const Body = styled.div`
   width: 100vw;
   height: 100vh;
@@ -294,7 +282,6 @@ const Years = styled.span`
   padding-bottom: 6px;
 `;
 
-
 const MealToggleGroup = styled.div`
   display: flex;
   border: 1px solid #ccc;
@@ -307,9 +294,8 @@ const MealToggleButton = styled.button<MealToggleButtonProps>`
   font-size: 20px;
   border: none;
   cursor: pointer;
-
   background-color: ${({ active }) => (active ? "#444f61" : "white")};
-  color:            ${({ active }) => (active ? "white"   : "#444f61")};
+  color: ${({ active }) => (active ? "white" : "#444f61")};
 `;
 
 const LoginButton = styled.button`
@@ -348,7 +334,6 @@ const Tbody = styled.tbody`
   tr:nth-of-type(odd) {
     background-color: white;
   }
-
   tr:nth-of-type(even) {
     background-color: #eef0f4;
   }
@@ -361,14 +346,6 @@ const Th = styled.th`
   border-bottom: 2px solid #ccc;
   padding: 12px;
   font-size: 24px;
-
-  &:first-of-type {
-    border-top-left-radius: 6px;
-  }
-  &:last-of-type {
-    border-top-right-radius: 6px;
-  }
-
   position: sticky;
   top: 0;
   z-index: 10;
@@ -379,10 +356,6 @@ const Td = styled.td`
   padding: 12px;
   font-size: 24px;
   text-align: center;
-
-  &:last-of-type {
-    border-right: none;
-  }
 `;
 
 const EmptyTd = styled.td`
@@ -418,7 +391,6 @@ const ApplyButton = styled.button`
   cursor: pointer;
 `;
 
-/*토스트~~~*/
 const ToastMessage = styled.div<ToastMessageProps>`
   position: fixed;
   top: 24px;
@@ -434,7 +406,6 @@ const ToastMessage = styled.div<ToastMessageProps>`
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 `;
 
-/*삭제 확인 모달*/
 const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
