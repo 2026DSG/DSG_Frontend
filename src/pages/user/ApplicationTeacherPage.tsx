@@ -18,8 +18,8 @@ interface Teacher {
   createdAt: string;
 }
 
-type MealType = "중식" | "석식";
-type ReasonType = "초과근무" | "개인부담";
+// ✅ 백엔드 enum과 정확히 일치
+type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 
 
 const CHOSUNG_LIST = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
@@ -41,7 +41,6 @@ const matchesChosung = (name: string, query: string): boolean => {
 
 
 
-
 /**교직원 전체 목록 조회 */
 const fetchTeachers = async (): Promise<Teacher[]> => {
   const response = await fetch("/teacher");
@@ -49,11 +48,11 @@ const fetchTeachers = async (): Promise<Teacher[]> => {
   return response.json() as Promise<Teacher[]>;
 };
 
+
 /** POST /meals - 급식 신청 생성 */
 const postMealApplication = async (body: {
   teacherId: number;
   meal: MealType;
-  reason: ReasonType;
   date: string;
 }): Promise<void> => {
   const response = await fetch("/meals", {
@@ -80,8 +79,9 @@ const ApplicationTeacherPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const mealParam = (searchParams.get("meal") ?? "석식") as MealType;
-  const reasonParam = (searchParams.get("reason") ?? "초과근무") as ReasonType;
+  // ✅ meal만 사용 (백엔드 enum 그대로)
+  const mealParam = (searchParams.get("meal") ?? "DINNER") as MealType;
+
   const dateParam =
     searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
 
@@ -115,7 +115,7 @@ const ApplicationTeacherPage = () => {
     [teachers, chosungQuery]
   );
 
-  // ── 초성 키보드 입력 처리
+
   const handleKeyPress = (key: string) => {
     if (key === "←") {
       setChosungQuery((prev) => prev.slice(0, -1));
@@ -126,7 +126,6 @@ const ApplicationTeacherPage = () => {
   };
 
 
-  //신청/ POST 후 홈으로 이동
   const handleApply = async () => {
     if (selectedId === null || isSubmitting) return;
     setIsSubmitting(true);
@@ -135,10 +134,9 @@ const ApplicationTeacherPage = () => {
       await postMealApplication({
         teacherId: selectedId,
         meal: mealParam,
-        reason: reasonParam,
         date: dateParam,
       });
-      // 홈으로 복귀 → 홈에서 신청 리스트 재조회
+
       navigate("/");
     } catch {
       setError("신청에 실패했습니다. 다시 시도해주세요.");
@@ -154,8 +152,6 @@ const ApplicationTeacherPage = () => {
 
           <TabContainer>
             <TabButton active={true}>{mealParam}</TabButton>
-            <Divider>|</Divider>
-            <TabButton active={false}>{reasonParam}</TabButton>
           </TabContainer>
 
           <MainContent>
@@ -243,6 +239,7 @@ const ApplicationTeacherPage = () => {
 
 
 
+
 const Body = styled.div`
   width: 100vw;
   height: 100vh;
@@ -268,18 +265,12 @@ const TabContainer = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 16px;
-  margin-right: 0px;
 `;
 
 const TabButton = styled.span<{ active: boolean }>`
   font-size: 18px;
   font-weight: 400;
   color: #000000;
-`;
-
-const Divider = styled.span`
-  color: #dbdbdb;
-  font-size: 22px;
 `;
 
 const MainContent = styled.div`
@@ -343,13 +334,6 @@ const TableWrapper = styled.div`
   overflow-y: scroll;
   border: 1px solid #e5e5e5;
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
 `;
 
 const Table = styled.table`
@@ -371,26 +355,15 @@ const Th = styled.th`
   padding: 15px;
   font-size: 22px;
   border-bottom: 2px solid #ccc;
-  &:first-of-type {
-    border-top-left-radius: 6px;
-  }
-  &:last-of-type {
-    border-top-right-radius: 6px;
-  }
 `;
 
 const Tbody = styled.tbody`
-  tr:nth-of-type(odd) {
-    background-color: white;
-  }
-  tr:nth-of-type(even) {
-    background-color: #eef0f4;
-  }
+  tr:nth-of-type(odd) { background-color: white; }
+  tr:nth-of-type(even) { background-color: #eef0f4; }
 `;
 
 const Tr = styled.tr<{ isSelected?: boolean }>`
   cursor: pointer;
-  position: relative;
   outline: ${(props) => (props.isSelected ? "3px solid #b1b1b1" : "none")};
   outline-offset: -3px;
 `;
@@ -400,9 +373,6 @@ const Td = styled.td`
   font-size: 22px;
   text-align: center;
   border-right: 1px solid #e0e0e0;
-  &:last-child {
-    border-right: none;
-  }
 `;
 
 const StatusTd = styled.td`
