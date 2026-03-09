@@ -2,22 +2,102 @@ import styled from "@emotion/styled";
 import Header from "../../components/Header";
 import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
+import CloseButton from "../../assets/CloseButton.svg";
 import Calender from "../../assets/calender.svg";
-import Close from "../../assets/CloseButton.svg";
 import Footer from "../../components/Footer";
 import { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const formatDate = (date: Date) => {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, "0");
+    const d = date.getDate().toString().padStart(2, "0");
+    return `${y} / ${m} / ${d}`;
+  };
+
+  const goToPrevDay = () => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 1);
+      return d;
+    });
+  };
+
+  const goToNextDay = () => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 1);
+      return d;
+    });
+  };
+
+  type applicant = {
+    name: string;
+    department: string;
+    position: string;
+    reason: string;
+    meal: string;
+  };
+
+  const applicant = [
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+    {
+      name: "이동욱",
+      department: "SW교육부",
+      position: "교사",
+      reason: "초과근무",
+      meal: "조식",
+    },
+  ];
+
   return (
     <Body>
       <TotalContainer>
         <Header title="신청자리스트" showBack />
         <UpsideBox>
           <YearNavigator>
-            <img src={ArrowLeft} alt="이전 날짜" />
-            <Years>2025 / 12 / 19</Years>
-            <img src={ArrowRight} alt="이후 날짜" />
+            <img src={ArrowLeft} onClick={goToPrevDay} alt="이전 날짜" />
+            <Years>{formatDate(selectedDate)}</Years>
+            <img src={ArrowRight} onClick={goToNextDay} alt="이후 날짜" />
           </YearNavigator>
 
           <CalenderButton onClick={() => setIsOpen(true)}>
@@ -38,85 +118,53 @@ const ApplicationListPage = () => {
             </Thead>
 
             <Tbody>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
-              <Tr>
-                <Td>석식</Td>
-                <Td>권수현</Td>
-                <Td>SW교육부</Td>
-                <Td>교사</Td>
-                <Td>개인부담</Td>
-              </Tr>
+              {applicant.length === 0 ? (
+                <Tr>
+                  <EmptyTd colSpan={5}>신청자가 존재하지 않습니다.</EmptyTd>
+                </Tr>
+              ) : (
+                applicant.map((applicant, index) => (
+                  <Tr key={index}>
+                    <Td>{applicant.meal}</Td>
+                    <Td>{applicant.name}</Td>
+                    <Td>{applicant.department}</Td>
+                    <Td>{applicant.position}</Td>
+                    <Td>{applicant.reason}</Td>
+                  </Tr>
+                ))
+              )}
             </Tbody>
           </Table>
         </TableWrapper>
 
         <ButtonBox>
           <OutputButton>신청자 월별 액셀 출력</OutputButton>
+          <OutputButton>총괄표 출력</OutputButton>
         </ButtonBox>
       </TotalContainer>
       {isOpen && (
         <ModalOverlay onClick={() => setIsOpen(false)}>
-          <ModalContainer onClick={(e) => e.stopPropagation()}>
-            <ModalHeader>
-              <ArrowButton>
-                <img src={ArrowLeft} alt="" />
-              </ArrowButton>
-              <MonthText>2025년 12월</MonthText>
-              <ArrowButton>
-                <img src={ArrowRight} alt="" />
-              </ArrowButton>
-              <CloseButton onClick={() => setIsOpen(false)}>
-                <img src={Close} alt="" />
-              </CloseButton>
-            </ModalHeader>
-
-            <Divider />
-
-            <CalendarBody>
-              
-            </CalendarBody>
-          </ModalContainer>
+          <CalendarBody onClick={(e) => e.stopPropagation()}>
+            <CloseIcon
+              src={CloseButton}
+              alt="닫기"
+              onClick={() => setIsOpen(false)}
+            />
+            <StyledCalendar
+              value={selectedDate}
+              onChange={(date) => {
+                setSelectedDate(date as Date);
+                setIsOpen(false);
+              }}
+              calendarType="gregory"
+              view="month"
+              prev2Label={null}
+              next2Label={null}
+              prevLabel={<img src={ArrowLeft} />}
+              nextLabel={<img src={ArrowRight} />}
+              formatDay={(_, date) => String(date.getDate())}
+            />
+          </CalendarBody>
         </ModalOverlay>
       )}
       <Footer />
@@ -180,6 +228,7 @@ const TableWrapper = styled.div`
   margin-top: 21px;
   max-height: 400px;
   overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 6, 0.2);
 `;
 
 const Table = styled.table`
@@ -205,23 +254,30 @@ const Tbody = styled.tbody`
 
 const Tr = styled.tr``;
 
+const EmptyTd = styled.td`
+  padding: 150px 0;
+  font-size: 24px;
+  text-align: center;
+  color: #888;
+  background-color: white;
+`;
+
 const Th = styled.th`
   background-color: #444f61;
   border-bottom: 2px solid #ccc;
   padding: 12px;
   font-size: 24px;
 
-  /* 왼쪽 위 모서리 */
   &:first-of-type {
     border-top-left-radius: 6px;
   }
-  /* 오른쪽 위 모서리 */
+
   &:last-of-type {
     border-top-right-radius: 6px;
   }
 
-  position: sticky; // 스크롤 시 고정
-  top: 0; // 최상단 고정
+  position: sticky;
+  top: 0;
   z-index: 10;
 `;
 
@@ -249,6 +305,7 @@ const ButtonBox = styled.div`
 `;
 
 const OutputButton = styled.button`
+  width: 340px;
   padding: 20px 24px;
   font-size: 32px;
   color: white;
@@ -266,58 +323,97 @@ const ModalOverlay = styled.div`
   z-index: 999;
 `;
 
-const ModalContainer = styled.div`
-  width: 320px;
-  height: 320px;
+const CalendarBody = styled.div`
+  height: auto;
+  position: relative;
   background: white;
   border-radius: 12px;
-  padding: 24px;
+  height: 300px;
 `;
 
-const ModalHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  font-size: 20px;
-  font-weight: 600;
-`;
-
-const MonthText = styled.span`
-  margin: 0 16px;
-`;
-
-const ArrowButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 20px;
-  margin-top: 6px;
-  cursor: pointer;
-`;
-
-const CloseButton = styled.button`
+const CloseIcon = styled.img`
+  width: 20px;
+  height: 20px;
   position: absolute;
-  right: 0;
-  top: 0;
-  background: none;
-  border: none;
-  font-size: 22px;
+  top: 20px;
+  right: 10px;
+  width: 30px;
   cursor: pointer;
+`;
 
-  img {
-    width: 14px;
-    height: 14px;
+const StyledCalendar = styled(Calendar)`
+  width: 400px;
+  border: none;
+  border-radius: 12px;
+  padding: 30px 50px;
+
+  /* 달력 헤더 */
+  .react-calendar__navigation__label {
+    font-size: 20px;
+    font-weight: 500;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-`;
 
-const Divider = styled.div`
-  height: 1px;
-  background: #e0e0e0;
-  margin: 16px 0 10px 0;
-`;
+  /* 달 이동 버튼 배경 */
+  .react-calendar__navigation button:hover,
+  .react-calendar__navigation button:focus {
+    background-color: transparent;
+  }
 
-const CalendarBody = styled.div`
-  min-height: 210px;
+  /* 나눔줄 추가 */
+  .react-calendar__navigation {
+    border-bottom: 3px solid #e8e8e8;
+  }
+
+  /* 일요일에 빨간 폰트 */
+  .react-calendar__month-view__weekdays__weekday--weekend abbr[title="일요일"] {
+    color: #ff0000;
+  }
+
+  /* 토요일에 파란 폰트 */
+  .react-calendar__month-view__weekdays__weekday--weekend abbr[title="토요일"] {
+    color: #2e7af2;
+  }
+
+  /* 요일 밑줄 제거 */
+  .react-calendar__month-view__weekdays__weekday abbr {
+    text-decoration: none;
+  }
+
+  .react-calendar__month-view__days__day--weekend:nth-of-type(7n) abbr {
+    color: #2e7af2;
+  }
+
+  .react-calendar__month-view__days__day--neighboringMonth {
+    abbr {
+      color: #dcdcdc !important;
+    }
+  }
+
+  .react-calendar__tile--active {
+    background: none;
+    color: #424242;
+  }
+
+  /* 오늘 날짜 타일 스타일링 */
+  .react-calendar__tile--now {
+    background: #fff;
+    font-weight: bold;
+  }
+
+  .react-calendar__tile:enabled:hover,
+  .react-calendar__tile:enabled:focus {
+    background: transparent;
+  }
+
+  .react-calendar__tile--active {
+    background: #444f61 !important;
+    color: white !important;
+    border-radius: 50%;
+  }
 `;
 
 export default ApplicationListPage;

@@ -10,9 +10,9 @@ import ApplicationTeacherPage from "./pages/user/ApplicationTeacherPage";
 function App() {
   return (
     <Routes>
-      <Route path="/get/teacher" element={<TeacherListPage />} />
-      <Route path="/post/teacher" element={<TeacherCreatePage />} />
-      <Route path="/get/apply" element={<ApplicationListPage />} />
+      <Route path="/admin/teachers" element={<TeacherListPage />} />
+      <Route path="/admin/teachers/new" element={<TeacherCreatePage />} />
+      <Route path="/admin/apply" element={<ApplicationListPage />} />
       <Route path="/" element={<HomePage />} />
       <Route path="/apply/reason" element={<ApplicationReasonPage />} />
       <Route path="/apply/teacher" element={<ApplicationTeacherPage />} />
