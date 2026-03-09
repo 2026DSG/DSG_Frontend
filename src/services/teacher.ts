@@ -42,13 +42,6 @@ export const downloadTeacherExcel = async () => {
   const res = await instance.get("/teacher/excel", {
     responseType: "blob",
   });
-  return res.data;
-};
-
-export const downloadTeacherExcel2 = async () => {
-  const res = await instance.get("/teacher/excel", {
-    responseType: "blob",
-  });
 
   const disposition = res.headers["content-disposition"];
   const fileName = disposition
