@@ -7,6 +7,8 @@ const Footer = () => {
         <span>FE 강세아 최하은</span>
         <Divider />
         <span>BE 권수현 김민서</span>
+        <Divider />
+        <span>DevOps 김지윤</span>
       </Content>
     </FooterContainer>
   );
