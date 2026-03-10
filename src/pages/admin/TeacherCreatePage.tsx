@@ -3,14 +3,29 @@ import { useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import styled from "@emotion/styled";
+import { createTeacher } from "../../services/teacher";
 
 const TeacherCreatePage = () => {
   const [name, setName] = useState<string>("");
   const [department, setDepartment] = useState<string>("");
   const [position, setPosition] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const isDisabled = !name || !department || !position;
+  const isDisabled = !name || !department || !position || isLoading;
   const navigate = useNavigate();
+
+  const handleCreate = async () => {
+    try {
+      setIsLoading(true);
+      await createTeacher({ name, department, position });
+      navigate("/admin/teachers");
+    } catch (err) {
+      console.error("교직원 등록 실패:", err);
+      alert("교직원 등록에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Body>
@@ -46,15 +61,12 @@ const TeacherCreatePage = () => {
               ></FormInput>
             </FormGroup>
           </TeacherForm>
-          <CreateButton
-            onClick={() => navigate("/get/teacher")}
-            disabled={isDisabled}
-          >
-            등록하기
+          <CreateButton onClick={handleCreate} disabled={isDisabled}>
+            {isLoading ? "등록중.." : "등록하기"}
           </CreateButton>
         </TeacherFormContainer>
       </TotalContainer>
-      <Footer/>
+      <Footer />
     </Body>
   );
 };
