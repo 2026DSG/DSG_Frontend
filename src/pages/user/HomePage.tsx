@@ -11,26 +11,15 @@ import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
+import { getMealList, deleteMealById } from "../../services/mealService";
+import type { MealType, MealItem } from "../../services/mealService";
 
-// ✅ 백엔드 enum과 정확히 일치하도록 수정
-type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
-
-// 토스트 알림..
+// 토스트 알림
 type ToastType = "success" | "error";
 interface Toast {
   text: string;
   type: ToastType;
 }
-
-interface MealItem {
-  id: number;
-  name: string;
-  reason: string;
-  department: string;
-  position: string;
-}
-
-
 
 // 2025 / 12 / 19 형식으로 변환
 const formatDate = (date: Date): string => {
@@ -48,32 +37,13 @@ const toDateParam = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// ✅ 13:30 이후 DINNER, 그외 LUNCH
+// 13:30 이후 DINNER, 그외 LUNCH
 const getDefaultMealType = (): MealType => {
   const now         = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
   if (totalMinute >= 13 * 60 + 30) return "DINNER";
   return "LUNCH";
 };
-
-
-
-// GET /meals?date=2025-12-19&meal=LUNCH
-const getMealList = async (date: string, meal: MealType): Promise<MealItem[]> => {
-  const response = await fetch(`/meals?date=${date}&meal=${meal}`);
-  if (!response.ok) throw new Error("목록 조회 실패");
-  return response.json() as Promise<MealItem[]>;
-};
-
-// DELETE /meals/:id
-const deleteMealById = async (id: number): Promise<void> => {
-  const response = await fetch(`/meals/${id}`, { method: "DELETE" });
-  if (!response.ok) throw new Error("삭제 실패");
-};
-
-
-
-
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -84,7 +54,6 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
-
 
   useEffect(() => {
     const loadData = async (): Promise<void> => {
@@ -102,12 +71,10 @@ const HomePage = () => {
     loadData();
   }, [currentDate, mealType]);
 
-
   const showToast = (text: string, type: ToastType): void => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
-
 
   const handleDateChange = (step: number): void => {
     setCurrentDate((prev) => {
@@ -116,7 +83,6 @@ const HomePage = () => {
       return newDate;
     });
   };
-
 
   const handleDeleteClick = (id: number): void => {
     setDeletingId(id);
@@ -136,11 +102,9 @@ const HomePage = () => {
     }
   };
 
-
   const handleApplyClick = (): void => {
     navigate(`/apply/reason?meal=${mealType}&date=${toDateParam(currentDate)}`);
   };
-
 
   return (
     <Body>
@@ -172,7 +136,6 @@ const HomePage = () => {
           </YearNavigator>
 
           <MealToggleGroup>
-            {/* ✅ 학교부담 기준으로 기본 토글 */}
             <MealToggleButton
               active={mealType === "LUNCH"}
               onClick={() => setMealType("LUNCH")}
@@ -235,18 +198,12 @@ const HomePage = () => {
   );
 };
 
-
-
-
-
 interface MealToggleButtonProps {
   active: boolean;
 }
 interface ToastMessageProps {
   type: ToastType;
 }
-
-
 
 const Body = styled.div`
   width: 100vw;
