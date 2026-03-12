@@ -1,5 +1,16 @@
 import { instance } from "./instance";
 
+
+export interface Teacher {
+  id: number;
+  name: string;
+  department: string;
+  position: string;
+  number: number;
+  createdAt: string;
+}
+
+// 교직원 등록/수정 요청 타입
 interface TeacherData {
   id?: number;
   department: string;
@@ -7,9 +18,10 @@ interface TeacherData {
   name: string;
 }
 
-// 교직원 전체 조회
-export const getTeacherList = async () => {
+// 교직원 전체 조회 GET /teacher
+export const getTeacherList = async (): Promise<Teacher[]> => {
   const res = await instance.get("/teacher");
+  if (!Array.isArray(res.data)) throw new Error("올바르지 않은 응답입니다.");
   return res.data;
 };
 
@@ -37,7 +49,8 @@ export const updateTeacherExcel = async (formData: FormData) => {
   return res.data;
 };
 
-// 엑셀 출력
+
+// 엑셀 다운로드
 export const downloadTeacherExcel = async () => {
   const res = await instance.get("/teacher/excel", {
     responseType: "blob",
