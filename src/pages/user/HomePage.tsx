@@ -271,7 +271,7 @@ const LoginButton = styled.button`
 const TableWrapper = styled.div`
   margin-top: 21px;
   max-height: 370px;
-  height: auto;
+  height: 370px;
   overflow-y: auto;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
