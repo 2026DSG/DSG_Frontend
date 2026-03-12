@@ -7,19 +7,10 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SearchIcon from "../../assets/Search.svg";
 
-
-
-interface Teacher {
-  id: number;
-  name: string;
-  department: string;
-  position: string;
-  number: number;
-  createdAt: string;
-}
-
-// ✅ 백엔드 enum과 정확히 일치
-type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
+import { getTeacherList } from "../../services/teacher";
+import type { Teacher } from "../../services/teacher";
+import { postMealApplication } from "../../services/mealService";
+import type { MealType } from "../../services/mealService";
 
 const MEAL_LABEL: Record<MealType, string> = {
   LUNCH: "초과근무 | 중식",
@@ -27,7 +18,6 @@ const MEAL_LABEL: Record<MealType, string> = {
   DINNER: "초과근무 | 석식",
   DINNER_SELF: "개인부담 | 석식",
 };
-
 
 const CHOSUNG_LIST = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
 
@@ -46,32 +36,6 @@ const matchesChosung = (name: string, query: string): boolean => {
   return true;
 };
 
-
-
-/**교직원 전체 목록 조회 */
-const fetchTeachers = async (): Promise<Teacher[]> => {
-  const response = await fetch("/teacher");
-  if (!response.ok) throw new Error("교직원 목록 조회 실패");
-  return response.json() as Promise<Teacher[]>;
-};
-
-
-/** POST /meals - 급식 신청 생성 */
-const postMealApplication = async (body: {
-  teacherId: number;
-  meal: MealType;
-  date: string;
-}): Promise<void> => {
-  const response = await fetch("/meals", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error("신청 실패");
-};
-
-
-
 const KEYBOARD_ROWS = [
   ["ㄱ", "ㄴ", "ㄷ"],
   ["ㄹ", "ㅁ", "ㅂ"],
@@ -80,33 +44,26 @@ const KEYBOARD_ROWS = [
   ["ㅍ", "ㅎ", "←"],
 ];
 
-
-
 const ApplicationTeacherPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // ✅ meal만 사용 (백엔드 enum 그대로)
   const mealParam = (searchParams.get("meal") ?? "DINNER") as MealType;
-
-  const dateParam =
-    searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+  const dateParam = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [chosungQuery, setChosungQuery] = useState<string>("");
-
 
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await fetchTeachers();
+        const data = await getTeacherList();
         setTeachers(data);
       } catch {
         setError("교직원 목록을 불러오지 못했습니다.");
@@ -122,7 +79,6 @@ const ApplicationTeacherPage = () => {
     [teachers, chosungQuery]
   );
 
-
   const handleKeyPress = (key: string) => {
     if (key === "←") {
       setChosungQuery((prev) => prev.slice(0, -1));
@@ -131,7 +87,6 @@ const ApplicationTeacherPage = () => {
     }
     setSelectedId(null);
   };
-
 
   const handleApply = async () => {
     if (selectedId === null || isSubmitting) return;
@@ -143,7 +98,6 @@ const ApplicationTeacherPage = () => {
         meal: mealParam,
         date: dateParam,
       });
-
       navigate("/");
     } catch {
       setError("신청에 실패했습니다. 다시 시도해주세요.");
@@ -242,7 +196,6 @@ const ApplicationTeacherPage = () => {
     </Body>
   );
 };
-
 
 const Body = styled.div`
   width: 100vw;
