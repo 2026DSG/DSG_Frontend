@@ -1,8 +1,6 @@
 import { instance } from "./instance";
 
-<<<<<<< Updated upstream
-=======
-// 교직원 정보 타입
+
 export interface Teacher {
   id: number;
   name: string;
@@ -13,7 +11,6 @@ export interface Teacher {
 }
 
 // 교직원 등록/수정 요청 타입
->>>>>>> Stashed changes
 interface TeacherData {
   id?: number;
   department: string;
@@ -21,16 +18,10 @@ interface TeacherData {
   name: string;
 }
 
-<<<<<<< Updated upstream
-// 교직원 전체 조회
-export const getTeacherList = async () => {
-  const res = await instance.get("/teacher");
-=======
 // 교직원 전체 조회 GET /teacher
 export const getTeacherList = async (): Promise<Teacher[]> => {
   const res = await instance.get("/teacher");
   if (!Array.isArray(res.data)) throw new Error("올바르지 않은 응답입니다.");
->>>>>>> Stashed changes
   return res.data;
 };
 
@@ -58,11 +49,8 @@ export const updateTeacherExcel = async (formData: FormData) => {
   return res.data;
 };
 
-<<<<<<< Updated upstream
-// 엑셀 출력
-=======
+
 // 엑셀 다운로드
->>>>>>> Stashed changes
 export const downloadTeacherExcel = async () => {
   const res = await instance.get("/teacher/excel", {
     responseType: "blob",
