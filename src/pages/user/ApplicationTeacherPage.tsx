@@ -21,6 +21,13 @@ interface Teacher {
 // ✅ 백엔드 enum과 정확히 일치
 type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 
+const MEAL_LABEL: Record<MealType, string> = {
+  LUNCH: "초과근무 | 중식",
+  LUNCH_SELF: "개인부담 | 중식",
+  DINNER: "초과근무 | 석식",
+  DINNER_SELF: "개인부담 | 석식",
+};
+
 
 const CHOSUNG_LIST = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
 
@@ -151,7 +158,7 @@ const ApplicationTeacherPage = () => {
           <Header title="교직원 선택" showBack />
 
           <TabContainer>
-            <TabButton active={true}>{mealParam}</TabButton>
+            <TabButton active={true}>{MEAL_LABEL[mealParam]}</TabButton>
           </TabContainer>
 
           <MainContent>
@@ -235,9 +242,6 @@ const ApplicationTeacherPage = () => {
     </Body>
   );
 };
-
-
-
 
 
 const Body = styled.div`
