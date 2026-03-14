@@ -5,13 +5,27 @@ import ArrowRight from "../../assets/arrowRight.svg";
 import CloseButton from "../../assets/CloseButton.svg";
 import Calender from "../../assets/calender.svg";
 import Footer from "../../components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import {
+  getApplyList,
+  downloadMonthlyExcel,
+  downloadSummaryExcel,
+} from "../../services/apply";
+import type { Applicant } from "../../services/apply";
+
+const mealLabel: Record<string, string> = {
+  LUNCH: "중식",
+  LUNCH_SELF: "중식",
+  DINNER: "석식",
+  DINNER_SELF: "석식",
+};
 
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [allApplicantList, setAllApplicantList] = useState<Applicant[]>([]);
 
   const formatDate = (date: Date) => {
     const y = date.getFullYear();
@@ -19,6 +33,18 @@ const ApplicationListPage = () => {
     const d = date.getDate().toString().padStart(2, "0");
     return `${y} / ${m} / ${d}`;
   };
+
+  useEffect(() => {
+    getApplyList()
+      .then(setAllApplicantList)
+      .catch(() => alert("신청자 목록 조회에 실패했습니다."));
+  }, []);
+
+  const applicantList = allApplicantList.filter((a) => {
+    const createdDate = a.createdAt.slice(0, 10);
+    const selected = selectedDate.toLocaleDateString("sv-SE");
+    return createdDate === selected;
+  });
 
   const goToPrevDay = () => {
     setSelectedDate((prev) => {
@@ -35,59 +61,6 @@ const ApplicationListPage = () => {
       return d;
     });
   };
-
-  type applicant = {
-    name: string;
-    department: string;
-    position: string;
-    reason: string;
-    meal: string;
-  };
-
-  const applicant = [
-    {
-      name: "이동욱",
-      department: "SW교육부",
-      position: "교사",
-      reason: "초과근무",
-      meal: "조식",
-    },
-    {
-      name: "이동욱",
-      department: "SW교육부",
-      position: "교사",
-      reason: "초과근무",
-      meal: "조식",
-    },
-    {
-      name: "이동욱",
-      department: "SW교육부",
-      position: "교사",
-      reason: "초과근무",
-      meal: "조식",
-    },
-    {
-      name: "이동욱",
-      department: "SW교육부",
-      position: "교사",
-      reason: "초과근무",
-      meal: "조식",
-    },
-    {
-      name: "이동욱",
-      department: "SW교육부",
-      position: "교사",
-      reason: "초과근무",
-      meal: "조식",
-    },
-    {
-      name: "이동욱",
-      department: "SW교육부",
-      position: "교사",
-      reason: "초과근무",
-      meal: "조식",
-    },
-  ];
 
   return (
     <Body>
@@ -118,15 +91,15 @@ const ApplicationListPage = () => {
             </Thead>
 
             <Tbody>
-              {applicant.length === 0 ? (
+              {applicantList.length === 0 ? (
                 <Tr>
                   <EmptyTd colSpan={5}>신청자가 존재하지 않습니다.</EmptyTd>
                 </Tr>
               ) : (
-                applicant.map((applicant, index) => (
-                  <Tr key={index}>
-                    <Td>{applicant.meal}</Td>
-                    <Td>{applicant.name}</Td>
+                applicantList.map((applicant) => (
+                  <Tr key={applicant.applyId}>
+                    <Td>{mealLabel[applicant.meal] ?? applicant.meal}</Td>
+                    <Td>{applicant.teacherName}</Td>
                     <Td>{applicant.department}</Td>
                     <Td>{applicant.position}</Td>
                     <Td>{applicant.reason}</Td>
@@ -138,8 +111,12 @@ const ApplicationListPage = () => {
         </TableWrapper>
 
         <ButtonBox>
-          <OutputButton>신청자 월별 액셀 출력</OutputButton>
-          <OutputButton>총괄표 출력</OutputButton>
+          <OutputButton onClick={downloadMonthlyExcel}>
+            신청자 월별 액셀 출력
+          </OutputButton>
+          <OutputButton onClick={downloadSummaryExcel}>
+            총괄표 출력
+          </OutputButton>
         </ButtonBox>
       </TotalContainer>
       {isOpen && (
@@ -347,7 +324,6 @@ const StyledCalendar = styled(Calendar)`
   border-radius: 12px;
   padding: 30px 50px;
 
-  /* 달력 헤더 */
   .react-calendar__navigation__label {
     font-size: 20px;
     font-weight: 500;
@@ -357,28 +333,23 @@ const StyledCalendar = styled(Calendar)`
     align-items: center;
   }
 
-  /* 달 이동 버튼 배경 */
   .react-calendar__navigation button:hover,
   .react-calendar__navigation button:focus {
     background-color: transparent;
   }
 
-  /* 나눔줄 추가 */
   .react-calendar__navigation {
     border-bottom: 3px solid #e8e8e8;
   }
 
-  /* 일요일에 빨간 폰트 */
   .react-calendar__month-view__weekdays__weekday--weekend abbr[title="일요일"] {
     color: #ff0000;
   }
 
-  /* 토요일에 파란 폰트 */
   .react-calendar__month-view__weekdays__weekday--weekend abbr[title="토요일"] {
     color: #2e7af2;
   }
 
-  /* 요일 밑줄 제거 */
   .react-calendar__month-view__weekdays__weekday abbr {
     text-decoration: none;
   }
@@ -398,7 +369,6 @@ const StyledCalendar = styled(Calendar)`
     color: #424242;
   }
 
-  /* 오늘 날짜 타일 스타일링 */
   .react-calendar__tile--now {
     background: #fff;
     font-weight: bold;
