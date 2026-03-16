@@ -1,5 +1,4 @@
-import { instance } from "./instance";
-
+import instance from "./instance";
 
 export interface Teacher {
   id: number;
@@ -49,7 +48,6 @@ export const updateTeacherExcel = async (formData: FormData) => {
   return res.data;
 };
 
-
 // 엑셀 다운로드
 export const downloadTeacherExcel = async () => {
   const res = await instance.get("/teacher/excel", {
@@ -67,4 +65,10 @@ export const downloadTeacherExcel = async () => {
   a.download = fileName;
   a.click();
   URL.revokeObjectURL(url);
+};
+
+// 연도 필터링
+export const getYearsFilter = async (year: number) => {
+  const res = await instance.get("/teacher", { params: { year } });
+  return res.data;
 };

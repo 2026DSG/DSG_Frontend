@@ -6,6 +6,7 @@ import ApplicationListPage from "./pages/admin/ApplicationListPage";
 import HomePage from "./pages/user/HomePage";
 import ApplicationReasonPage from "./pages/user/ApplicationReasonPage";
 import ApplicationTeacherPage from "./pages/user/ApplicationTeacherPage";
+import LoginPage from "./pages/user/LoginPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/apply/reason" element={<ApplicationReasonPage />} />
       <Route path="/apply/teacher" element={<ApplicationTeacherPage />} />
+      <Route path="/login" element={<LoginPage />} />
     </Routes>
   );
 }
