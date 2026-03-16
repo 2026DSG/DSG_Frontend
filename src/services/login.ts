@@ -17,8 +17,8 @@ export const loginUser = async (
     const response = await instance.post<LoginResponse>("/login", payload);
     const { accessToken, refreshToken } = response.data;
 
-    document.cookie = `accessToken=${accessToken}; path=/; Secure; SameSite=Strict`;
-    document.cookie = `refreshToken=${refreshToken}; path=/; Secure; SameSite=Strict`;
+    document.cookie = `accessToken=${accessToken}; path=/; max-age=3600; Secure; SameSite=Strict`;
+    document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; Secure; SameSite=Strict`;
 
     return response.data;
   } catch (err: unknown) {
