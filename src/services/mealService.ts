@@ -1,4 +1,4 @@
-import { instance } from "./instance";
+import instance from "./instance";
 
 export type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 
