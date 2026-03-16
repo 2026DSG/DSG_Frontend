@@ -50,7 +50,7 @@ instance.interceptors.response.use(
         );
 
         // 새 Access Token 쿠키에 저장
-        document.cookie = `accessToken=${data.accessToken}; path=/; Secure; SameSite=Strict`;
+        document.cookie = `accessToken=${data.accessToken}; path=/; max-age=3600; Secure; SameSite=Strict`;
 
         // 실패했던 요청 재시도
         if (originalRequest?.headers) {
