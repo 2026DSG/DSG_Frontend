@@ -1,72 +1,161 @@
 import axios from "axios";
-import type { AxiosInstance } from "axios";
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
-const instance: AxiosInstance = axios.create({
+// 토큰 저장소
+let accessToken: string | null = null;
+
+const getStoredRefreshToken = (): string | null => {
+  try {
+    return localStorage.getItem("refreshToken");
+  } catch {
+    return null;
+  }
+};
+
+const setStoredRefreshToken = (token: string): void => {
+  try {
+    localStorage.setItem("refreshToken", token);
+  } catch {
+    console.warn("localStorage 저장 실패");
+  }
+};
+
+const removeStoredRefreshToken = (): void => {
+  try {
+    localStorage.removeItem("refreshToken");
+  } catch {
+    console.warn("localStorage 삭제 실패");
+  }
+};
+
+let refreshToken: string | null = getStoredRefreshToken();
+
+// 동시 요청 race condition 처리
+let isRefreshing = false;
+
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
+// 로그아웃 이벤트
+export const AUTH_LOGOUT_EVENT = "auth:logout";
+
+const dispatchLogout = () => {
+  window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
+};
+
+// axios 인스턴스 생성
+const baseConfig = {
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
-});
-
-// 쿠키에서 특정 값 가져오는 헬퍼 함수
-const getCookie = (name: string): string | null => {
-  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
-  return match ? match[2] : null;
 };
 
-// 요청 인터셉터 - 모든 요청에 Access Token 자동 첨부
+const authApi = axios.create({
+  ...baseConfig,
+  timeout: 10000,
+});
+
+const instance: AxiosInstance = axios.create(baseConfig);
+
+// 토큰 관리
+export const setTokens = (newAccess: string, newRefresh: string) => {
+  accessToken = newAccess;
+  refreshToken = newRefresh;
+  setStoredRefreshToken(newRefresh);
+};
+
+export const clearTokens = () => {
+  accessToken = null;
+  refreshToken = null;
+  removeStoredRefreshToken();
+};
+
+// 요청 인터셉터
 instance.interceptors.request.use(
   (config) => {
-    const accessToken = getCookie("accessToken");
     if (accessToken) {
+      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
-  (error: unknown) => Promise.reject(error),
+  (error) => Promise.reject(error),
 );
 
-// 응답 인터셉터 - 401 발생 시 Refresh Token으로 자동 갱신
+// 응답 인터셉터
 instance.interceptors.response.use(
   (response) => response,
-  async (error: unknown) => {
-    if (!axios.isAxiosError(error)) return Promise.reject(error);
+  async (error) => {
+    if (!axios.isAxiosError(error)) {
+      return Promise.reject(error);
+    }
 
-    const originalRequest = error.config as typeof error.config & {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
 
-    // 401이고 재시도 안 한 요청만 갱신 시도
-    if (error.response?.status === 401 && !originalRequest?._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = getCookie("refreshToken");
-        const { data } = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
-          { refreshToken },
-        );
-
-        // 새 Access Token 쿠키에 저장
-        document.cookie = `accessToken=${data.accessToken}; path=/; max-age=3600; Secure; SameSite=Strict`;
-
-        // 실패했던 요청 재시도
-        if (originalRequest?.headers) {
-          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-        }
-        return instance(originalRequest!);
-      } catch (refreshError: unknown) {
-        // Refresh Token도 만료 → 강제 로그아웃
-        document.cookie = "accessToken=; path=/; max-age=0";
-        document.cookie = "refreshToken=; path=/; max-age=0";
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      }
+    // 401 아니거나 이미 재시도한 요청이면 그대로 reject
+    if (error.response?.status !== 401 || originalRequest?._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    // refresh 중이면 큐에 대기
+    if (isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then((token) => {
+        originalRequest.headers = originalRequest.headers ?? {};
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return instance(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      if (!refreshToken) {
+        throw new Error("No refresh token");
+      }
+
+      const { data } = await authApi.post("/auth/refresh", {
+        refreshToken,
+      });
+
+      const newAccess: string = data.accessToken;
+      const newRefresh: string = data.refreshToken;
+
+      setTokens(newAccess, newRefresh);
+
+      processQueue(null, newAccess);
+
+      originalRequest.headers = originalRequest.headers ?? {};
+      originalRequest.headers.Authorization = `Bearer ${newAccess}`;
+
+      return instance(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError);
+      clearTokens();
+      dispatchLogout();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   },
 );
 
