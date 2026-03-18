@@ -104,14 +104,6 @@ const TeacherListPage = () => {
     });
   };
 
-  const teachers = [
-    { name: "이동욱", department: "SW교육부", position: "교사" },
-    { name: "이동욱", department: "SW교육부", position: "교사" },
-    { name: "이동욱", department: "SW교육부", position: "교사" },
-    { name: "이동욱", department: "SW교육부", position: "교사" },
-    { name: "이동욱", department: "SW교육부", position: "교사" },
-  ];
-
   return (
     <Body>
       <TotalContainer>
@@ -187,14 +179,6 @@ const TeacherListPage = () => {
   );
 };
 
-const EmptyTd = styled.td`
-  padding: 150px 0;
-  font-size: 24px;
-  text-align: center;
-  color: #888;
-  background-color: white;
-`;
-
 const Body = styled.div`
   width: 100vw;
   min-height: 100vh;
@@ -252,8 +236,10 @@ const TableWrapper = styled.div`
 
 const Table = styled.table`
   width: 100%;
+  //border-collapse: collapse;
   border-collapse: separate;
   border-spacing: 0;
+  //border-radius: 6px;
 `;
 
 const Thead = styled.thead`
@@ -299,6 +285,9 @@ const Th = styled.th`
   position: sticky; // 스크롤 시 고정
   top: 0; // 최상단 고정
   z-index: 10;
+
+  //position: sticky;
+  //top: 0;
 `;
 
 const Td = styled.td`
