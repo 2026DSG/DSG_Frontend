@@ -7,6 +7,7 @@ import type {
 
 // 토큰 저장소
 let accessToken: string | null = null;
+let refreshToken: string | null = null;
 
 const getStoredRefreshToken = (): string | null => {
   try {
@@ -32,9 +33,18 @@ const removeStoredRefreshToken = (): void => {
   }
 };
 
-let refreshToken: string | null = getStoredRefreshToken();
+// 항상 최신 refreshToken 보장
+const getRefreshToken = (): string | null => {
+  const stored = getStoredRefreshToken();
 
-// 동시 요청 race condition 처리
+  if (stored !== refreshToken) {
+    refreshToken = stored;
+  }
+
+  return refreshToken;
+};
+
+// 동시 요청 처리
 let isRefreshing = false;
 
 let failedQueue: Array<{
@@ -77,6 +87,7 @@ const authApi = axios.create({
   timeout: 10000,
 });
 
+// 일반 API
 const instance: AxiosInstance = axios.create(baseConfig);
 
 // 토큰 관리
@@ -121,7 +132,7 @@ instance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // refresh 중이면 큐에 대기
+    // 이미 refresh 중이면 큐에 대기
     if (isRefreshing) {
       return new Promise<AxiosResponse>((resolve, reject) => {
         failedQueue.push({ resolve, reject, originalRequest });
@@ -132,12 +143,14 @@ instance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      if (!refreshToken) {
+      const token = getRefreshToken();
+
+      if (!token) {
         throw new Error("No refresh token");
       }
 
       const { data } = await authApi.post("/auth/refresh", {
-        refreshToken,
+        refreshToken: token,
       });
 
       if (!data.accessToken || !data.refreshToken) {
@@ -153,7 +166,9 @@ instance.interceptors.response.use(
       originalRequest.headers.Authorization = `Bearer ${newAccess}`;
 
       const result = instance(originalRequest);
+
       processQueue(null, newAccess);
+
       return result;
     } catch (refreshError) {
       processQueue(refreshError);
