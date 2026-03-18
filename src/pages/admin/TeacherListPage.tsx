@@ -104,6 +104,14 @@ const TeacherListPage = () => {
     });
   };
 
+  const teachers = [
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+    { name: "이동욱", department: "SW교육부", position: "교사" },
+  ];
+
   return (
     <Body>
       <TotalContainer>
