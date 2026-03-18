@@ -1,5 +1,9 @@
 import axios from "axios";
-import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import type {
+  AxiosInstance,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 
 // 토큰 저장소
 let accessToken: string | null = null;
@@ -34,16 +38,18 @@ let refreshToken: string | null = getStoredRefreshToken();
 let isRefreshing = false;
 
 let failedQueue: Array<{
-  resolve: (token: string) => void;
+  resolve: (value: AxiosResponse) => void;
   reject: (err: unknown) => void;
+  originalRequest: InternalAxiosRequestConfig;
 }> = [];
 
 const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
+  failedQueue.forEach(({ resolve, reject, originalRequest }) => {
     if (error) {
-      prom.reject(error);
+      reject(error);
     } else {
-      prom.resolve(token!);
+      originalRequest.headers.Authorization = `Bearer ${token!}`;
+      instance(originalRequest).then(resolve).catch(reject);
     }
   });
   failedQueue = [];
@@ -65,6 +71,7 @@ const baseConfig = {
   },
 };
 
+// refresh 전용 인스턴스
 const authApi = axios.create({
   ...baseConfig,
   timeout: 10000,
@@ -116,12 +123,8 @@ instance.interceptors.response.use(
 
     // refresh 중이면 큐에 대기
     if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      }).then((token) => {
-        originalRequest.headers = originalRequest.headers ?? {};
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return instance(originalRequest);
+      return new Promise<AxiosResponse>((resolve, reject) => {
+        failedQueue.push({ resolve, reject, originalRequest });
       });
     }
 
@@ -137,17 +140,21 @@ instance.interceptors.response.use(
         refreshToken,
       });
 
+      if (!data.accessToken || !data.refreshToken) {
+        throw new Error("Invalid refresh response");
+      }
+
       const newAccess: string = data.accessToken;
       const newRefresh: string = data.refreshToken;
 
       setTokens(newAccess, newRefresh);
 
-      processQueue(null, newAccess);
-
       originalRequest.headers = originalRequest.headers ?? {};
       originalRequest.headers.Authorization = `Bearer ${newAccess}`;
 
-      return instance(originalRequest);
+      const result = instance(originalRequest);
+      processQueue(null, newAccess);
+      return result;
     } catch (refreshError) {
       processQueue(refreshError);
       clearTokens();
