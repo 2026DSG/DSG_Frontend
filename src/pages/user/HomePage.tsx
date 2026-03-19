@@ -150,7 +150,7 @@ const HomePage = () => {
             </MealToggleButton>
           </MealToggleGroup>
 
-          <LoginButton>
+          <LoginButton onClick={() => navigate("/login")}>
             <img src={user as string} alt="유저 아이콘" />
             Login
           </LoginButton>
