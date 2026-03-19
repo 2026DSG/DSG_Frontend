@@ -14,7 +14,8 @@ export interface Applicant {
 // 신청자 전체 조회
 export const getApplyList = async (meal?: string): Promise<Applicant[]> => {
   const res = await instance.get("/apply", { params: meal ? { meal } : {} });
-  return res.data;
+  const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+  return list;
 };
 
 // 월별 엑셀 출력
