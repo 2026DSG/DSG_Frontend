@@ -68,7 +68,9 @@ export const downloadTeacherExcel = async () => {
 };
 
 // 연도 필터링
-export const getYearsFilter = async (year: number) => {
+export const getYearsFilter = async (year: number): Promise<Teacher[]> => {
   const res = await instance.get("/teacher", { params: { year } });
-  return res.data;
+  console.log("teacher res.data:", res.data); // 구조 확인
+  const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+  return list;
 };
