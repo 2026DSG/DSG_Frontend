@@ -9,15 +9,15 @@ import { loginUser } from "../../services/login";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [id, setId] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const navigate = useNavigate();
 
-  const isValid = id.trim() !== "" && password.trim() !== "";
+  const isValid = username.trim() !== "" && password.trim() !== "";
 
   const handleLogin = async () => {
     try {
-      await loginUser({ id, password });
+      await loginUser({ username, password });
       navigate("/admin/teachers");
     } catch (err) {
       console.error(err)
@@ -37,8 +37,8 @@ const LoginPage = () => {
                 type="text"
                 placeholder="아이디를 입력해주세요"
                 autoComplete="username"
-                value={id}
-                onChange={(e) => setId(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </InputBox>
             <InputBox>

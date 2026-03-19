@@ -1,7 +1,7 @@
 import instance from "./instance";
 
 interface LoginPayload {
-  id: string;
+  username: string;
   password: string;
 }
 
