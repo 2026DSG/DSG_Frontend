@@ -15,12 +15,13 @@ const LoginPage = () => {
 
   const isValid = username.trim() !== "" && password.trim() !== "";
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.MouseEvent | React.FormEvent) => {
+    e.preventDefault();
     try {
       await loginUser({ username, password });
       navigate("/admin/teachers");
     } catch (err) {
-      console.error(err)
+      console.error(err);
       alert("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
   };
@@ -28,7 +29,7 @@ const LoginPage = () => {
     <Body>
       <TotalContainer>
         <Header title="Login" showBack />
-        <LoginForm>
+        <LoginForm onSubmit={handleLogin}>
           <Title>Login</Title>
           <FormBox>
             <InputBox>
@@ -61,7 +62,7 @@ const LoginPage = () => {
               </PwdContainer>
             </InputBox>
           </FormBox>
-          <LoginButton disabled={!isValid} onClick={handleLogin}>
+          <LoginButton disabled={!isValid} type="submit">
             로그인
           </LoginButton>
         </LoginForm>
