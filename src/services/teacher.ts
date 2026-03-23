@@ -19,38 +19,38 @@ interface TeacherData {
 
 // 교직원 전체 조회 GET /teacher
 export const getTeacherList = async (): Promise<Teacher[]> => {
-  const res = await instance.get("/teacher");
+  const res = await instance.get("/admin/teacher");
   if (!Array.isArray(res.data)) throw new Error("올바르지 않은 응답입니다.");
   return res.data;
 };
 
 // 교직원 등록
 export const createTeacher = async (data: TeacherData) => {
-  const res = await instance.post("/teacher", data);
+  const res = await instance.post("/admin/teacher", data);
   return res.data;
 };
 
 // 교직원 삭제
 export const deleteTeacher = async (id: number) => {
-  const res = await instance.delete(`/teacher/${id}`);
+  const res = await instance.delete(`/admin/teacher/${id}`);
   return res.data;
 };
 
 // 엑셀 최초 등록
 export const uploadTeacherExcel = async (formData: FormData) => {
-  const res = await instance.post("/teacher/excel", formData, {});
+  const res = await instance.post("/admin/teacher/excel", formData, {});
   return res.data;
 };
 
 // 엑셀 수정 등록
 export const updateTeacherExcel = async (formData: FormData) => {
-  const res = await instance.put("/teacher/excel", formData);
+  const res = await instance.put("/admin/teacher/excel", formData);
   return res.data;
 };
 
 // 엑셀 다운로드
 export const downloadTeacherExcel = async () => {
-  const res = await instance.get("/teacher/excel", {
+  const res = await instance.get("/admin/teacher/excel", {
     responseType: "blob",
   });
 
@@ -69,7 +69,7 @@ export const downloadTeacherExcel = async () => {
 
 // 연도 필터링
 export const getYearsFilter = async (year: number): Promise<Teacher[]> => {
-  const res = await instance.get("/teacher", { params: { year } });
+  const res = await instance.get("/admin/teacher", { params: { year } });
   console.log("teacher res.data:", res.data); // 구조 확인
   const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
   return list;
