@@ -14,7 +14,7 @@ export const loginUser = async (
   payload: LoginPayload,
 ): Promise<LoginResponse> => {
   try {
-    const response = await instance.post<LoginResponse>("/login", payload);
+    const response = await instance.post<LoginResponse>("/main/login", payload);
     const { accessToken, refreshToken } = response.data;
 
     document.cookie = `accessToken=${accessToken}; path=/; max-age=3600; Secure; SameSite=Strict`;
