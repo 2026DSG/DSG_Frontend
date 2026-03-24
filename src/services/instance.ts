@@ -66,7 +66,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 };
 
 // 로그아웃 이벤트
-export const AUTH_LOGOUT_EVENT = "auth:logout";
+export const AUTH_LOGOUT_EVENT = "main:logout";
 
 const dispatchLogout = () => {
   window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
@@ -92,6 +92,7 @@ const instance: AxiosInstance = axios.create(baseConfig);
 
 // 토큰 관리
 export const setTokens = (newAccess: string, newRefresh: string) => {
+  console.log("setTokens 호출됨", newAccess);
   accessToken = newAccess;
   refreshToken = newRefresh;
   setStoredRefreshToken(newRefresh);
@@ -106,6 +107,7 @@ export const clearTokens = () => {
 // 요청 인터셉터
 instance.interceptors.request.use(
   (config) => {
+    console.log("요청 시 accessToken:", accessToken);
     if (accessToken) {
       config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -128,7 +130,12 @@ instance.interceptors.response.use(
     };
 
     // 401 아니거나 이미 재시도한 요청이면 그대로 reject
-    if (error.response?.status !== 401 || originalRequest?._retry) {
+    if (
+      (error.response?.status !== 401 &&
+        error.response?.status !== 403 &&
+        error.response?.status !== 404) ||
+      originalRequest?._retry
+    ) {
       return Promise.reject(error);
     }
 
@@ -149,7 +156,7 @@ instance.interceptors.response.use(
         throw new Error("No refresh token");
       }
 
-      const { data } = await authApi.post("/auth/refresh", {
+      const { data } = await authApi.post("/main/refresh", {
         refreshToken: token,
       });
 
