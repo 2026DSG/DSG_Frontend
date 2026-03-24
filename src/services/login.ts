@@ -1,4 +1,4 @@
-import instance from "./instance";
+import instance, { setTokens, clearTokens } from "./instance";
 
 interface LoginPayload {
   username: string;
@@ -13,23 +13,14 @@ interface LoginResponse {
 export const loginUser = async (
   payload: LoginPayload,
 ): Promise<LoginResponse> => {
-  try {
-    const response = await instance.post<LoginResponse>("/main/login", payload);
-    const { accessToken, refreshToken } = response.data;
+  const response = await instance.post<LoginResponse>("/main/login", payload);
+  const { accessToken, refreshToken } = response.data;
 
-    document.cookie = `accessToken=${accessToken}; path=/; max-age=3600; Secure; SameSite=Strict`;
-    document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; Secure; SameSite=Strict`;
+  setTokens(accessToken, refreshToken);
 
-    return response.data;
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error("Login Error:", err.message);
-    }
-    throw err;
-  }
+  return response.data;
 };
 
 export const logoutUser = (): void => {
-  document.cookie = "accessToken=; path=/; max-age=0";
-  document.cookie = "refreshToken=; path=/; max-age=0";
+  clearTokens();
 };
