@@ -97,6 +97,7 @@ const ApplicationTeacherPage = () => {
         teacherId: selectedId,
         meal: mealParam,
         date: dateParam,
+        reason: "",
       });
       navigate("/");
     } catch {
