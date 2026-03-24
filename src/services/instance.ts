@@ -82,7 +82,7 @@ const baseConfig = {
 };
 
 // refresh 전용 인스턴스
-const authApi = axios.create({
+export const authApi = axios.create({
   ...baseConfig,
   timeout: 10000,
 });
