@@ -38,13 +38,21 @@ export const deleteTeacher = async (id: number) => {
 
 // 엑셀 최초 등록
 export const uploadTeacherExcel = async (formData: FormData) => {
-  const res = await instance.post("/admin/teacher/excel", formData, {});
+  const res = await instance.post("/admin/teacher/excel", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return res.data;
 };
 
 // 엑셀 수정 등록
 export const updateTeacherExcel = async (formData: FormData) => {
-  const res = await instance.put("/admin/teacher/excel", formData);
+  const res = await instance.put("/admin/teacher/excel", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return res.data;
 };
 
