@@ -6,7 +6,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
-
 // ✅ 백엔드 enum과 정확히 일치
 type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 
@@ -19,7 +18,6 @@ const getDefaultMealType = (): BaseMealType => {
   if (totalMinute >= 13 * 60 + 30) return "DINNER";
   return "LUNCH";
 };
-
 
 const ApplicationReasonPage = () => {
   const navigate = useNavigate();
@@ -55,11 +53,11 @@ const ApplicationReasonPage = () => {
       finalMeal = isSelf ? "DINNER_SELF" : "DINNER";
     }
 
+    // ✅ 리액트 라우터 화면 주소인 /apply/teacher 로 올바르게 이동합니다.
     navigate(
       `/apply/teacher?meal=${finalMeal}&date=${dateParam}`
     );
   };
-
 
   return (
     <Body>
