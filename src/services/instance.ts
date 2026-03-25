@@ -95,22 +95,38 @@ export const setTokens = (newAccess: string, newRefresh: string) => {
   console.log("setTokens 호출됨", newAccess);
   accessToken = newAccess;
   refreshToken = newRefresh;
+
+  // localStorage에 accessToken도 저장
+  try {
+    localStorage.setItem("accessToken", newAccess);
+  } catch {
+    console.warn("localStorage 저장 실패");
+  }
   setStoredRefreshToken(newRefresh);
 };
 
 export const clearTokens = () => {
   accessToken = null;
   refreshToken = null;
+  try {
+    localStorage.removeItem("accessToken");
+  } catch {
+    console.warn("localStorage 삭제 실패");
+  }
   removeStoredRefreshToken();
 };
 
 // 요청 인터셉터
 instance.interceptors.request.use(
   (config) => {
-    console.log("요청 시 accessToken:", accessToken);
-    if (accessToken) {
+    // 메모리가 아닌 localStorage에서 항상 최신값을 읽음
+    const storedToken = localStorage.getItem("accessToken");
+    const token = storedToken || accessToken;
+
+    console.log("요청 시 accessToken:", token);
+    if (token) {
       config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${accessToken}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -130,12 +146,7 @@ instance.interceptors.response.use(
     };
 
     // 401 아니거나 이미 재시도한 요청이면 그대로 reject
-    if (
-      (error.response?.status !== 401 &&
-        error.response?.status !== 403 &&
-        error.response?.status !== 404) ||
-      originalRequest?._retry
-    ) {
+    if (error.response?.status !== 401 || originalRequest?._retry) {
       return Promise.reject(error);
     }
 
@@ -187,5 +198,14 @@ instance.interceptors.response.use(
     }
   },
 );
+
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (event) => {
+    if (event.key === "accessToken" && !event.newValue) {
+      accessToken = null;
+      dispatchLogout();
+    }
+  });
+}
 
 export default instance;
