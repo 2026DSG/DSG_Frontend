@@ -88,16 +88,20 @@ const ApplicationTeacherPage = () => {
     setSelectedId(null);
   };
 
-  const handleApply = async () => {
+const handleApply = async () => {
     if (selectedId === null || isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
+
+    // MEAL_LABEL에서 사유 문자열만 추출 ("초과근무 | 중식" -> "초과근무")
+    const extractedReason = MEAL_LABEL[mealParam].split(" | ")[0];
+
     try {
       await postMealApplication({
         teacherId: selectedId,
         meal: mealParam,
         date: dateParam,
-        reason: "",
+        reason: extractedReason,
       });
       navigate("/");
     } catch {
