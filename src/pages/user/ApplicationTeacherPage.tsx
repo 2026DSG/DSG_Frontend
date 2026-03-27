@@ -103,7 +103,10 @@ const handleApply = async () => {
         date: dateParam,
         reason: extractedReason,
       });
-      navigate("/");
+
+      // 메인으로 갈 때 방금 신청한 날짜와 탭(LUNCH or DINNER) 상태를 유지하도록 수정
+      const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
+      navigate(`/?date=${dateParam}&meal=${baseMeal}`);
     } catch {
       setError("신청에 실패했습니다. 다시 시도해주세요.");
       setIsSubmitting(false);
