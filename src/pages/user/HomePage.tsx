@@ -64,7 +64,6 @@ const HomePage = () => {
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
-        // ✅ 중식/석식 탭에 맞춰 (초과근무 + 개인부담) 2가지를 동시에 불러옴
         const typesToFetch: MealType[] =
           mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
 
@@ -73,7 +72,6 @@ const HomePage = () => {
           getMealList(currentDateString, typesToFetch[1]),
         ]);
 
-        // 두 데이터를 합친 후, id 순서대로(신청순) 정렬
         const combined = [...normalData, ...selfData].sort((a, b) => a.id - b.id);
         setMealList(combined);
       } catch {
@@ -188,9 +186,10 @@ const HomePage = () => {
                 <Tr><EmptyTd colSpan={5}>신청 내역이 없습니다.</EmptyTd></Tr>
               )}
 
+              {/* ✅ 여기서 TypeScript 에러 없이 item.teacherName을 정확하게 사용합니다. */}
               {!isLoading && mealList.map((item: MealItem) => (
                 <Tr key={item.id}>
-                  <Td>{item.name}</Td>
+                  <Td>{item.teacherName}</Td>
                   <Td>{item.reason}</Td>
                   <Td>{item.department}</Td>
                   <Td>{item.position}</Td>
@@ -212,35 +211,220 @@ const HomePage = () => {
   );
 };
 
-interface MealToggleButtonProps { active: boolean; }
-interface ToastMessageProps { type: ToastType; }
 
-// --- 아래 Styled Components는 기존과 100% 동일합니다 ---
-const Body = styled.div` width: 100vw; height: 100vh; `;
-const TotalContainer = styled.div` display: flex; flex-direction: column; margin: 0px 120px; `;
-const ControlRow = styled.div` display: flex; align-items: center; gap: 20px; margin-top: 34px; `;
-const YearNavigator = styled.div` display: flex; align-items: center; gap: 22px; img { width: 8px; cursor: pointer; } `;
-const Years = styled.span` font-size: 20px; padding-bottom: 6px; `;
-const MealToggleGroup = styled.div` display: flex; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; `;
-const MealToggleButton = styled.button<MealToggleButtonProps>` padding: 8px 16px; font-size: 20px; border: none; cursor: pointer; background-color: ${({ active }) => (active ? "#444f61" : "white")}; color: ${({ active }) => (active ? "white" : "#444f61")}; `;
-const LoginButton = styled.button` margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 8px 20px; font-size: 20px; border: 1px solid #ccc; border-radius: 6px; background-color: white; cursor: pointer; `;
-const TableWrapper = styled.div` margin-top: 21px; max-height: 370px; height: 370px; overflow-y: auto; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); `;
-const Table = styled.table` width: 100%; border-collapse: separate; border-spacing: 0; `;
-const Thead = styled.thead` background-color: #444f61; color: white; `;
-const Tbody = styled.tbody` tr:nth-of-type(odd) { background-color: white; } tr:nth-of-type(even) { background-color: #eef0f4; } `;
+interface MealToggleButtonProps {
+  active: boolean;
+}
+interface ToastMessageProps {
+  type: ToastType;
+}
+
+const Body = styled.div`
+  width: 100vw;
+  height: 100vh;
+`;
+
+const TotalContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 0px 120px;
+`;
+
+const ControlRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 34px;
+`;
+
+const YearNavigator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 22px;
+
+  img {
+    width: 8px;
+    cursor: pointer;
+  }
+`;
+
+const Years = styled.span`
+  font-size: 20px;
+  padding-bottom: 6px;
+`;
+
+const MealToggleGroup = styled.div`
+  display: flex;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+`;
+
+const MealToggleButton = styled.button<MealToggleButtonProps>`
+  padding: 8px 16px;
+  font-size: 20px;
+  border: none;
+  cursor: pointer;
+  background-color: ${({ active }) => (active ? "#444f61" : "white")};
+  color: ${({ active }) => (active ? "white" : "#444f61")};
+`;
+
+const LoginButton = styled.button`
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  font-size: 20px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+`;
+
+const TableWrapper = styled.div`
+  margin-top: 21px;
+  max-height: 370px;
+  height: 370px;
+  overflow-y: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+`;
+
+const Thead = styled.thead`
+  background-color: #444f61;
+  color: white;
+`;
+
+const Tbody = styled.tbody`
+  tr:nth-of-type(odd) {
+    background-color: white;
+  }
+  tr:nth-of-type(even) {
+    background-color: #eef0f4;
+  }
+`;
+
 const Tr = styled.tr``;
-const Th = styled.th` background-color: #444f61; border-bottom: 2px solid #ccc; padding: 12px; font-size: 24px; position: sticky; top: 0; z-index: 10; `;
-const Td = styled.td` border-right: 1px solid #e0e0e0; padding: 12px; font-size: 24px; text-align: center; `;
-const EmptyTd = styled.td` padding: 40px; font-size: 18px; text-align: center; color: #888; `;
-const DeleteButton = styled.button` font-size: 20px; padding: 5px 29px; border: none; border-radius: 6px; color: white; background-color: #444f61; cursor: pointer; `;
-const ButtonBox = styled.div` display: flex; justify-content: center; margin-top: 32px; `;
-const ApplyButton = styled.button` padding: 20px 120px; font-size: 32px; color: white; border: none; border-radius: 12px; background-color: #444f61; cursor: pointer; `;
-const ToastMessage = styled.div<ToastMessageProps>` position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 16px 28px; border-radius: 12px; font-size: 16px; font-weight: 600; color: white; background-color: ${({ type }) => (type === "success" ? "#27ae60" : "#e74c3c")}; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); `;
-const ModalOverlay = styled.div` position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 9000; `;
-const ModalBox = styled.div` background: white; border-radius: 12px; padding: 36px 48px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); `;
-const ModalMessage = styled.p` font-size: 22px; color: #222; margin: 0 0 28px; `;
-const ModalButtons = styled.div` display: flex; gap: 16px; justify-content: center; `;
-const CancelButton = styled.button` padding: 12px 36px; font-size: 18px; border: 1px solid #ccc; border-radius: 8px; background: white; color: #444; cursor: pointer; `;
-const ConfirmDeleteButton = styled.button` padding: 12px 36px; font-size: 18px; border: none; border-radius: 8px; background: #444f61; color: white; cursor: pointer; `;
+
+const Th = styled.th`
+  background-color: #444f61;
+  border-bottom: 2px solid #ccc;
+  padding: 12px;
+  font-size: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+`;
+
+const Td = styled.td`
+  border-right: 1px solid #e0e0e0;
+  padding: 12px;
+  font-size: 24px;
+  text-align: center;
+`;
+
+const EmptyTd = styled.td`
+  padding: 40px;
+  font-size: 18px;
+  text-align: center;
+  color: #888;
+`;
+
+const DeleteButton = styled.button`
+  font-size: 20px;
+  padding: 5px 29px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  background-color: #444f61;
+  cursor: pointer;
+`;
+
+const ButtonBox = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+`;
+
+const ApplyButton = styled.button`
+  padding: 20px 120px;
+  font-size: 32px;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  background-color: #444f61;
+  cursor: pointer;
+`;
+
+const ToastMessage = styled.div<ToastMessageProps>`
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 16px 28px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background-color: ${({ type }) => (type === "success" ? "#27ae60" : "#e74c3c")};
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+`;
+
+const ModalBox = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 36px 48px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+`;
+
+const ModalMessage = styled.p`
+  font-size: 22px;
+  color: #222;
+  margin: 0 0 28px;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+`;
+
+const CancelButton = styled.button`
+  padding: 12px 36px;
+  font-size: 18px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  color: #444;
+  cursor: pointer;
+`;
+
+const ConfirmDeleteButton = styled.button`
+  padding: 12px 36px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  background: #444f61;
+  color: white;
+  cursor: pointer;
+`;
 
 export default HomePage;
