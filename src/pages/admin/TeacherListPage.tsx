@@ -5,6 +5,7 @@ import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import type { Teacher } from "../../services/teacher";
 import {
   deleteTeacher,
   uploadTeacherExcel,
@@ -13,16 +14,9 @@ import {
   getYearsFilter,
 } from "../../services/teacher";
 
-type teacher = {
-  id: number;
-  name: string;
-  department: string;
-  position: string;
-};
-
 const TeacherListPage = () => {
   const navigate = useNavigate();
-  const [teacherList, setTeacherList] = useState<teacher[]>([]);
+  const [teacherList, setTeacherList] = useState<Teacher[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
