@@ -19,7 +19,17 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       await loginUser({ username, password });
-      navigate("/admin/teachers");
+
+      const role = localStorage.getItem("role");
+
+      if (role === "OFFICE") {
+        navigate("/admin/teachers");
+      } else if (role === "TABLET") {
+        navigate("/");
+      } else {
+        console.error("Unknown role:", role);
+        alert("권한 정보를 찾을 수 없습니다.");
+      }
     } catch (err) {
       console.error(err);
       alert("아이디 또는 비밀번호가 올바르지 않습니다.");

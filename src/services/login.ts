@@ -8,14 +8,15 @@ interface LoginPayload {
 interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  role: string;
 }
 
 export const loginUser = async (
   payload: LoginPayload,
 ): Promise<LoginResponse> => {
   const response = await instance.post<LoginResponse>("/main/login", payload);
-  const { accessToken, refreshToken } = response.data;
-
+  const { accessToken, refreshToken, role } = response.data;
+  localStorage.setItem("role", role);
   setTokens(accessToken, refreshToken);
 
   return response.data;
@@ -23,4 +24,5 @@ export const loginUser = async (
 
 export const logoutUser = (): void => {
   clearTokens();
+  localStorage.removeItem("role");
 };
