@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "@emotion/styled";
@@ -14,7 +12,6 @@ import user from "../../assets/user.svg";
 import { getMealList, deleteMealById } from "../../services/mealService";
 import type { MealType, MealItem } from "../../services/mealService";
 
-// 화면에서 탭으로 쓰일 기본 타입
 type BaseMealType = "LUNCH" | "DINNER";
 
 type ToastType = "success" | "error";
@@ -37,6 +34,7 @@ const toDateParam = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
+// 현재 시각 기준 기본 식사 타입 (신청하기 버튼 클릭 시 사용)
 const getDefaultMealType = (): BaseMealType => {
   const now         = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
@@ -52,6 +50,7 @@ const HomePage = () => {
   const mealQuery = searchParams.get("meal") as BaseMealType | null;
 
   const currentDate = dateQuery ? new Date(dateQuery) : new Date();
+  // 표 조회를 위한 mealType (토글 버튼에 의해 변경됨)
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
@@ -117,7 +116,9 @@ const HomePage = () => {
   };
 
   const handleApplyClick = (): void => {
-    navigate(`/apply/reason?meal=${mealType}&date=${currentDateString}`);
+    // 신청하기 버튼 클릭 시, 조회 중인 mealType이 아닌 '현재 시간 기준' 기본값으로 고정하여 넘깁니다.
+    const defaultApplyMeal = getDefaultMealType();
+    navigate(`/apply/reason?meal=${defaultApplyMeal}&date=${currentDateString}`);
   };
 
   return (
@@ -186,7 +187,6 @@ const HomePage = () => {
                 <Tr><EmptyTd colSpan={5}>신청 내역이 없습니다.</EmptyTd></Tr>
               )}
 
-              {/* ✅ 여기서 TypeScript 에러 없이 item.teacherName을 정확하게 사용합니다. */}
               {!isLoading && mealList.map((item: MealItem) => (
                 <Tr key={item.id}>
                   <Td>{item.teacherName}</Td>
@@ -210,7 +210,6 @@ const HomePage = () => {
     </Body>
   );
 };
-
 
 interface MealToggleButtonProps {
   active: boolean;
