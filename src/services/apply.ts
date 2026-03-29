@@ -13,14 +13,24 @@ export interface Applicant {
 
 // 신청자 전체 조회
 export const getApplyList = async (meal?: string): Promise<Applicant[]> => {
-  const res = await instance.get("/admin/apply", { params: meal ? { meal } : {} });
+  const res = await instance.get("/admin/apply", {
+    params: meal ? { meal } : {},
+  });
   const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
   return list;
 };
 
 // 월별 엑셀 출력
 export const downloadMonthlyExcel = async () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+
   const res = await instance.get("/admin/apply/excel/monthly", {
+    params: {
+      year,
+      month,
+    },
     responseType: "blob",
   });
 
@@ -39,7 +49,15 @@ export const downloadMonthlyExcel = async () => {
 
 // 총괄표 엑셀 출력
 export const downloadSummaryExcel = async () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+
   const res = await instance.get("/admin/apply/excel/summary", {
+    params: {
+      year,
+      month,
+    },
     responseType: "blob",
   });
 
