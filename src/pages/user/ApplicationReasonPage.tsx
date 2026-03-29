@@ -6,17 +6,19 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
-// ✅ 백엔드 enum과 정확히 일치
 type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 
-// 화면에서 보여줄 기본 식사 타입 (중식/석식만)
 type BaseMealType = "LUNCH" | "DINNER";
 
 const getDefaultMealType = (): BaseMealType => {
   const now = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
-  if (totalMinute >= 13 * 60 + 30) return "DINNER";
-  return "LUNCH";
+  
+  // 06:40 ~ 13:30 사이일 때만 중식
+  if (totalMinute >= 6 * 60 + 40 && totalMinute < 13 * 60 + 30) {
+    return "LUNCH";
+  }
+  return "DINNER";
 };
 
 const ApplicationReasonPage = () => {
@@ -27,6 +29,8 @@ const ApplicationReasonPage = () => {
     searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
 
   const [currentTime, setCurrentTime] = useState<string>('');
+  
+  // 메인페이지에서 넘겨준 파라미터가 최우선, 없으면 자체 계산
   const [mealType, setMealType] = useState<BaseMealType>(
     (searchParams.get("meal") as BaseMealType) ?? getDefaultMealType()
   );
