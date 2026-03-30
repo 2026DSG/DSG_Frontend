@@ -34,11 +34,17 @@ const toDateParam = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// 현재 시각 기준 기본 식사 타입 (신청하기 버튼 클릭 시 사용)
 const getDefaultMealType = (): BaseMealType => {
   const now         = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
-  if (totalMinute >= 13 * 60 + 30) return "DINNER";
+  
+  if (totalMinute >= 13 * 60 + 30) {
+    return "DINNER";
+  } 
+  else if (totalMinute >= 6 * 60 + 40) {
+    return "LUNCH";
+  }
+  
   return "LUNCH";
 };
 
@@ -71,7 +77,7 @@ const HomePage = () => {
           getMealList(currentDateString, typesToFetch[1]),
         ]);
 
-        const combined = [...normalData, ...selfData].sort((a, b) => a.id - b.id);
+        const combined = [...normalData, ...selfData].sort((a, b) => b.id - a.id);
         setMealList(combined);
       } catch {
         showToast("데이터를 불러오지 못했습니다.", "error");
