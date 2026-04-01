@@ -56,7 +56,6 @@ const HomePage = () => {
   const mealQuery = searchParams.get("meal") as BaseMealType | null;
 
   const currentDate = dateQuery ? new Date(dateQuery) : new Date();
-  // 표 조회를 위한 mealType (토글 버튼에 의해 변경됨)
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
@@ -77,7 +76,8 @@ const HomePage = () => {
           getMealList(currentDateString, typesToFetch[1]),
         ]);
 
-        const combined = [...normalData, ...selfData].sort((a, b) => b.id - a.id);
+        // id 대신 applyId를 사용하여 정렬
+        const combined = [...normalData, ...selfData].sort((a, b) => b.applyId - a.applyId);
         setMealList(combined);
       } catch {
         showToast("데이터를 불러오지 못했습니다.", "error");
@@ -104,15 +104,20 @@ const HomePage = () => {
     setSearchParams({ date: currentDateString, meal: newMeal });
   };
 
-  const handleDeleteClick = (id: number): void => {
-    setDeletingId(id);
+  const handleDeleteClick = (applyId: number): void => {
+    if (!applyId) {
+      showToast("유효하지 않은 항목입니다.", "error");
+      return;
+    }
+    setDeletingId(applyId);
   };
 
   const handleDeleteConfirm = async (): Promise<void> => {
     if (deletingId === null) return;
     try {
       await deleteMealById(deletingId);
-      setMealList((prev) => prev.filter((item) => item.id !== deletingId));
+      // id 대신 applyId로 비교하여 상태 업데이트
+      setMealList((prev) => prev.filter((item) => item.applyId !== deletingId));
       showToast("삭제되었습니다.", "success");
     } catch {
       showToast("삭제에 실패했습니다.", "error");
@@ -122,7 +127,6 @@ const HomePage = () => {
   };
 
   const handleApplyClick = (): void => {
-    // 신청하기 버튼 클릭 시, 조회 중인 mealType이 아닌 '현재 시간 기준' 기본값으로 고정하여 넘깁니다.
     const defaultApplyMeal = getDefaultMealType();
     navigate(`/apply/reason?meal=${defaultApplyMeal}&date=${currentDateString}`);
   };
@@ -193,14 +197,15 @@ const HomePage = () => {
                 <Tr><EmptyTd colSpan={5}>신청 내역이 없습니다.</EmptyTd></Tr>
               )}
 
+              {/* id 대신 applyId를 사용 */}
               {!isLoading && mealList.map((item: MealItem) => (
-                <Tr key={item.id}>
+                <Tr key={item.applyId}>
                   <Td>{item.teacherName}</Td>
                   <Td>{item.reason}</Td>
                   <Td>{item.department}</Td>
                   <Td>{item.position}</Td>
                   <Td>
-                    <DeleteButton onClick={() => handleDeleteClick(item.id)}>삭제</DeleteButton>
+                    <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
                   </Td>
                 </Tr>
               ))}

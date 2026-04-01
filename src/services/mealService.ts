@@ -3,7 +3,7 @@ import instance from "./instance";
 export type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 
 export interface MealItem {
-  id: number;
+  applyId: number;
   teacherName: string; 
   reason: string;
   department: string;
