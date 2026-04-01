@@ -86,14 +86,14 @@ const ApplicationTeacherPage = () => {
       setChosungQuery((prev) => prev + key);
     }
     setSelectedId(null);
+    setError(null); // 새로운 검색 시 에러 초기화
   };
 
-const handleApply = async () => {
+  const handleApply = async () => {
     if (selectedId === null || isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
 
-    // MEAL_LABEL에서 사유 문자열만 추출 ("초과근무 | 중식" -> "초과근무")
     const extractedReason = MEAL_LABEL[mealParam].split(" | ")[0];
 
     try {
@@ -106,8 +106,20 @@ const handleApply = async () => {
 
       const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
       navigate(`/?date=${dateParam}&meal=${baseMeal}`);
-    } catch {
-      setError("신청에 실패했습니다. 다시 시도해주세요.");
+    } catch (err: any) {
+      // API 응답 규격에 따른 예외 처리
+      const status = err.response?.status;
+      const message = err.response?.data?.message;
+
+      if (status === 400) {
+        setError(message || "입력 정보가 올바르지 않습니다.");
+      } else if (status === 404) {
+        setError("존재하지 않는 교직원입니다.");
+      } else if (status === 409) {
+        setError("이미 해당 날짜에 신청 내역이 존재합니다. (중복 신청 불가)");
+      } else {
+        setError("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      }
       setIsSubmitting(false);
     }
   };
@@ -117,7 +129,6 @@ const handleApply = async () => {
       <ContentWrapper>
         <TotalContainer>
           <Header title="교직원 선택" showBack />
-
           <TabContainer>
             <TabButton active={true}>{MEAL_LABEL[mealParam]}</TabButton>
           </TabContainer>
@@ -162,19 +173,20 @@ const handleApply = async () => {
                         <StatusTd colSpan={2}>불러오는 중...</StatusTd>
                       </tr>
                     )}
-
                     {!isLoading && filteredTeachers.length === 0 && (
                       <tr>
                         <StatusTd colSpan={2}>검색 결과가 없습니다.</StatusTd>
                       </tr>
                     )}
-
                     {!isLoading &&
                       filteredTeachers.map((teacher) => (
                         <Tr
                           key={teacher.id}
                           isSelected={selectedId === teacher.id}
-                          onClick={() => setSelectedId(teacher.id)}
+                          onClick={() => {
+                            setSelectedId(teacher.id);
+                            setError(null);
+                          }}
                         >
                           <Td>{teacher.name}</Td>
                           <Td>{teacher.department}</Td>
