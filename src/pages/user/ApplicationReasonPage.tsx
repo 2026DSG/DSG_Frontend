@@ -1,5 +1,3 @@
-'use client';
-
 import styled from "@emotion/styled";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -7,7 +5,6 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
 type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
-
 type BaseMealType = "LUNCH" | "DINNER";
 
 const getDefaultMealType = (): BaseMealType => {
@@ -25,8 +22,7 @@ const ApplicationReasonPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const dateParam =
-    searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+  const dateParam = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
 
   const [currentTime, setCurrentTime] = useState<string>('');
   
@@ -47,7 +43,7 @@ const ApplicationReasonPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ reason 선택 시 meal enum 완성해서 전달
+  // reason 선택 시 meal enum 완성해서 전달
   const handleReasonSelect = (isSelf: boolean) => {
     let finalMeal: MealType;
 
@@ -57,10 +53,8 @@ const ApplicationReasonPage = () => {
       finalMeal = isSelf ? "DINNER_SELF" : "DINNER";
     }
 
-    // ✅ 리액트 라우터 화면 주소인 /apply/teacher 로 올바르게 이동합니다.
-    navigate(
-      `/apply/teacher?meal=${finalMeal}&date=${dateParam}`
-    );
+    // 리액트 라우터 화면 주소인 /apply/teacher 로 올바르게 이동합니다.
+    navigate(`/apply/teacher?meal=${finalMeal}&date=${dateParam}`);
   };
 
   return (
