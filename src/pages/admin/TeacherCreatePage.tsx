@@ -53,12 +53,18 @@ const TeacherCreatePage = () => {
             </FormGroup>
             <FormGroup>
               <FormSpan>직위</FormSpan>
-              <FormInput
-                type="text"
+              <FormSelect
                 value={position}
-                placeholder="직위를 입력해주세요"
+                isEmpty={!position}
                 onChange={(e) => setPosition(e.target.value)}
-              ></FormInput>
+              >
+                <option value="" disabled>
+                  직위를 선택해주세요
+                </option>
+                <option value="teacher">교원</option>
+                <option value="general">일반직</option>
+                <option value="industrial">산학견임</option>
+              </FormSelect>
             </FormGroup>
           </TeacherForm>
           <CreateButton onClick={handleCreate} disabled={isDisabled}>
@@ -117,6 +123,14 @@ const FormInput = styled.input`
   border: 1px solid #c1c6d1;
   border-radius: 6px;
   font-size: 20px;
+`;
+
+const FormSelect = styled.select<{ isEmpty: boolean }>`
+  border: 1px solid #c1c6d1;
+  border-radius: 6px;
+  padding: 18px 16px;
+  font-size: 20px;
+  color: ${({ isEmpty }) => (isEmpty ? "#8e8c8c" : "#000")};
 `;
 
 const CreateButton = styled.button<{ disabled: boolean }>`
