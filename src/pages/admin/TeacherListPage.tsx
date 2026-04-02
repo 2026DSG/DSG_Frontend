@@ -14,6 +14,12 @@ import {
   getYearsFilter,
 } from "../../services/teacher";
 
+const PositionLabel: Record<string, string> = {
+  teacher: "교원",
+  general: "일반직",
+  industrial: "산학견임",
+};
+
 const TeacherListPage = () => {
   const navigate = useNavigate();
   const [teacherList, setTeacherList] = useState<Teacher[]>([]);
@@ -135,7 +141,9 @@ const TeacherListPage = () => {
                   <Tr key={teacher.id}>
                     <Td>{teacher.name}</Td>
                     <Td>{teacher.department}</Td>
-                    <Td>{teacher.position}</Td>
+                    <Td>
+                      {PositionLabel[teacher.position] ?? teacher.position}
+                    </Td>
                     <Td>
                       <button onClick={() => handleDelete(teacher.id)}>
                         삭제
