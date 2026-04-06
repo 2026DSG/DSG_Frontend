@@ -10,7 +10,12 @@ import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
 import { getMealList, deleteMealById } from "../../services/mealService";
-import type { MealType, MealItem } from "../../services/mealService";
+import type { MealType, MealItem as BaseMealItem } from "../../services/mealService";
+
+// 백엔드에서 추가한 createdAt 필드를 프론트엔드 타입에 반영합니다.
+interface MealItem extends BaseMealItem {
+  createdAt?: string;
+}
 
 type BaseMealType = "LUNCH" | "DINNER";
 
@@ -21,30 +26,41 @@ interface Toast {
 }
 
 const formatDate = (date: Date): string => {
-  const year  = date.getFullYear();
+  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day   = String(date.getDate()).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year} / ${month} / ${day}`;
 };
 
 const toDateParam = (date: Date): string => {
-  const year  = date.getFullYear();
+  const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day   = String(date.getDate()).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
+const formatDateTime = (dateString?: string): string => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
+// 현재 시간을 기준으로 중식/석식 여부 계산
 const getDefaultMealType = (): BaseMealType => {
-  const now         = new Date();
+  const now = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
-  
+
   if (totalMinute >= 13 * 60 + 30) {
     return "DINNER";
-  } 
-  else if (totalMinute >= 6 * 60 + 40) {
+  } else if (totalMinute >= 6 * 60 + 40) {
     return "LUNCH";
   }
-  
+
   return "LUNCH";
 };
 
@@ -76,8 +92,13 @@ const HomePage = () => {
           getMealList(currentDateString, typesToFetch[1]),
         ]);
 
-        // id 대신 applyId를 사용하여 정렬
-        const combined = [...normalData, ...selfData].sort((a, b) => b.applyId - a.applyId);
+        // 생성일(createdAt)이 있는 경우 최신순(내림차순) 정렬
+        const combined = [...normalData, ...selfData].sort((a: MealItem, b: MealItem) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.applyId;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.applyId;
+          return dateB - dateA;
+        });
+
         setMealList(combined);
       } catch {
         showToast("데이터를 불러오지 못했습니다.", "error");
@@ -116,7 +137,6 @@ const HomePage = () => {
     if (deletingId === null) return;
     try {
       await deleteMealById(deletingId);
-      // id 대신 applyId로 비교하여 상태 업데이트
       setMealList((prev) => prev.filter((item) => item.applyId !== deletingId));
       showToast("삭제되었습니다.", "success");
     } catch {
@@ -127,8 +147,12 @@ const HomePage = () => {
   };
 
   const handleApplyClick = (): void => {
-    const defaultApplyMeal = getDefaultMealType();
-    navigate(`/apply/reason?meal=${defaultApplyMeal}&date=${currentDateString}`);
+    // 💡 변경점: 조회 중인 날짜와 무관하게, 항상 '현재 시각'을 기준으로 신청 페이지로 이동
+    const now = new Date();
+    const todayString = toDateParam(now);
+    const currentMeal = getDefaultMealType();
+
+    navigate(`/apply/reason?meal=${currentMeal}&date=${todayString}`);
   };
 
   return (
@@ -188,22 +212,23 @@ const HomePage = () => {
                 <Th>사유</Th>
                 <Th>부서</Th>
                 <Th>직위</Th>
+                <Th>신청일시</Th>
                 <Th></Th>
               </Tr>
             </Thead>
 
             <Tbody>
               {!isLoading && mealList.length === 0 && (
-                <Tr><EmptyTd colSpan={5}>신청 내역이 없습니다.</EmptyTd></Tr>
+                <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
               )}
 
-              {/* id 대신 applyId를 사용 */}
               {!isLoading && mealList.map((item: MealItem) => (
                 <Tr key={item.applyId}>
                   <Td>{item.teacherName}</Td>
                   <Td>{item.reason}</Td>
                   <Td>{item.department}</Td>
                   <Td>{item.position}</Td>
+                  <Td>{formatDateTime(item.createdAt)}</Td>
                   <Td>
                     <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
                   </Td>
