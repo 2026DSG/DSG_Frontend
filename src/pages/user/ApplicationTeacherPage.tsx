@@ -1,5 +1,3 @@
-"use client";
-
 import styled from "@emotion/styled";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -86,7 +84,7 @@ const ApplicationTeacherPage = () => {
       setChosungQuery((prev) => prev + key);
     }
     setSelectedId(null);
-    setError(null); // 새로운 검색 시 에러 초기화
+    setError(null);
   };
 
   const handleApply = async () => {
@@ -107,7 +105,6 @@ const ApplicationTeacherPage = () => {
       const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
       navigate(`/?date=${dateParam}&meal=${baseMeal}`);
     } catch (err: any) {
-      // API 응답 규격에 따른 예외 처리
       const status = err.response?.status;
       const message = err.response?.data?.message;
 
@@ -116,7 +113,8 @@ const ApplicationTeacherPage = () => {
       } else if (status === 404) {
         setError("존재하지 않는 교직원입니다.");
       } else if (status === 409) {
-        setError("이미 해당 날짜에 신청 내역이 존재합니다. (중복 신청 불가)");
+        // 초과근무/개인부담 중 1개만 허용하는 변경 로직에 대응하는 예외 처리 문구 강화
+        setError("해당 날짜에 이미 신청 내역이 존재합니다. (초과근무/개인부담 중복 신청 불가)");
       } else {
         setError("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       }
