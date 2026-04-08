@@ -52,19 +52,17 @@ const ApplicationTeacherPage = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [chosungQuery, setChosungQuery] = useState<string>("");
 
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
-      setError(null);
       try {
         const data = await getTeacherList();
         setTeachers(data);
       } catch {
-        setError("교직원 목록을 불러오지 못했습니다.");
+        alert("교직원 목록을 불러오지 못했습니다.");
       } finally {
         setIsLoading(false);
       }
@@ -84,13 +82,11 @@ const ApplicationTeacherPage = () => {
       setChosungQuery((prev) => prev + key);
     }
     setSelectedId(null);
-    setError(null);
   };
 
   const handleApply = async () => {
     if (selectedId === null || isSubmitting) return;
     setIsSubmitting(true);
-    setError(null);
 
     const extractedReason = MEAL_LABEL[mealParam].split(" | ")[0];
 
@@ -109,14 +105,13 @@ const ApplicationTeacherPage = () => {
       const message = err.response?.data?.message;
 
       if (status === 400) {
-        setError(message || "입력 정보가 올바르지 않습니다.");
+        alert(message || "입력 정보가 올바르지 않습니다.");
       } else if (status === 404) {
-        setError("존재하지 않는 교직원입니다.");
+        alert("존재하지 않는 교직원입니다.");
       } else if (status === 409) {
-        // 초과근무/개인부담 중 1개만 허용하는 변경 로직에 대응하는 예외 처리 문구 강화
-        setError("해당 날짜에 이미 신청 내역이 존재합니다. (초과근무/개인부담 중복 신청 불가)");
+        alert("해당 날짜에 이미 신청 내역이 존재합니다. (초과근무/개인부담 중복 신청 불가)");
       } else {
-        setError("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       }
       setIsSubmitting(false);
     }
@@ -183,7 +178,6 @@ const ApplicationTeacherPage = () => {
                           isSelected={selectedId === teacher.id}
                           onClick={() => {
                             setSelectedId(teacher.id);
-                            setError(null);
                           }}
                         >
                           <Td>{teacher.name}</Td>
@@ -193,8 +187,6 @@ const ApplicationTeacherPage = () => {
                   </Tbody>
                 </Table>
               </TableWrapper>
-
-              {error && <ErrorText>{error}</ErrorText>}
 
               <ButtonBox>
                 <ApplyButton
@@ -354,13 +346,6 @@ const StatusTd = styled.td`
   font-size: 18px;
   text-align: center;
   color: #888;
-`;
-
-const ErrorText = styled.p`
-  color: #e74c3c;
-  font-size: 14px;
-  text-align: center;
-  margin: 8px 0 0;
 `;
 
 const ButtonBox = styled.div`
