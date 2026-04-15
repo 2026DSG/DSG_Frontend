@@ -58,21 +58,44 @@ export const updateTeacherExcel = async (formData: FormData) => {
 
 // 엑셀 다운로드
 export const downloadTeacherExcel = async () => {
-  const res = await instance.get("/admin/teacher/excel", {
-    responseType: "blob",
-  });
+  try {
+    const res = await instance.get("/admin/teacher/excel", {
+      responseType: "blob",
+    });
 
-  const disposition = res.headers["content-disposition"];
-  const fileName = disposition
-    ? disposition.split('filename="')[1].replace('"', "")
-    : "교직원_목록.xlsx";
+    const disposition = res.headers["content-disposition"];
+    const fileName = disposition
+      ? disposition.split('filename="')[1].replace('"', "")
+      : "교직원_목록.xlsx";
 
-  const url = URL.createObjectURL(res.data);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  URL.revokeObjectURL(url);
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err: unknown) {
+    const apiError = err as { response?: { status?: number; data?: Blob } };
+    const status = apiError?.response?.status;
+    const blob = apiError?.response?.data;
+
+    if (status === 404 && blob) {
+      const text = await blob.text();
+      try {
+        const json = JSON.parse(text);
+        throw { response: { status, data: json } };
+      } catch {
+        throw {
+          response: {
+            status,
+            data: { message: "교직원 정보가 비어있습니다." },
+          },
+        };
+      }
+    }
+
+    throw err;
+  }
 };
 
 // 연도 필터링
