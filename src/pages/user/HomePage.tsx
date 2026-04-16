@@ -29,7 +29,7 @@ const formatDate = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  return `${year} / ${month} / ${day}`;
+  return `${year} / ${month} /  ${day}`;
 };
 
 const toDateParam = (date: Date): string => {
@@ -122,7 +122,14 @@ const HomePage = () => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
 
+  // 로그인 상태 관리 (로컬스토리지의 토큰 존재 여부 확인)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
   useEffect(() => {
+    // 페이지 로드 시 토큰 확인 (키 이름은 프로젝트 환경에 맞춰 "accessToken" 등으로 수정하세요)
+    const token = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
+
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
@@ -238,10 +245,13 @@ const HomePage = () => {
             </MealToggleButton>
           </MealToggleGroup>
 
-          <LoginButton onClick={() => navigate("/login")}>
-            <img src={user as string} alt="유저 아이콘" />
-            Login
-          </LoginButton>
+          {/* 로그인 하지 않았을 때만 로그인 버튼 표시 */}
+          {!isLoggedIn && (
+            <LoginButton onClick={() => navigate("/login")}>
+              <img src={user as string} alt="유저 아이콘" />
+              Login
+            </LoginButton>
+          )}
         </ControlRow>
 
         <TableWrapper>
@@ -286,6 +296,8 @@ const HomePage = () => {
     </Body>
   );
 };
+
+// ... 이하 styled components (기존 코드와 동일)
 
 interface MealToggleButtonProps {
   active: boolean;
