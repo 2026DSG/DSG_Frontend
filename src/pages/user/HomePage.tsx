@@ -47,10 +47,9 @@ const formatDateTime = (dateString?: string): string => {
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+  return `${year}-${month}-${day}   ${hours}:${minutes}`;
 };
 
-// 현재 시간을 기준으로 중식/석식 여부 계산
 const getDefaultMealType = (): BaseMealType => {
   const now = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
@@ -64,6 +63,49 @@ const getDefaultMealType = (): BaseMealType => {
   return "LUNCH";
 };
 
+const DUMMY_MEAL_LIST: MealItem[] = [
+  {
+    teacherName: "권수현",
+    department: "교무부",
+    createdAt: "2024-01-01T08:30:00",
+    applyId: 1,
+    reason: "초과근무",
+    position: "교사",
+  },
+  {
+    teacherName: "이준호",
+    department: "과학부",
+    createdAt: "2024-01-01T09:10:00",
+    applyId: 2,
+    reason: "개인사유",
+    position: "교사",
+  },
+  {
+    teacherName: "박지영",
+    department: "행정실",
+    createdAt: "2024-01-01T09:45:00",
+    applyId: 3,
+    reason: "야근",
+    position: "행정직",
+  },
+  {
+    teacherName: "최민서",
+    department: "수학부",
+    createdAt: "2024-01-01T10:00:00",
+    applyId: 4,
+    reason: "초과근무",
+    position: "부장교사",
+  },
+  {
+    teacherName: "김태연",
+    department: "국어부",
+    createdAt: "2024-01-01T10:30:00",
+    applyId: 5,
+    reason: "업무처리",
+    position: "교사",
+  },
+];
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -75,7 +117,7 @@ const HomePage = () => {
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
-  const [mealList, setMealList] = useState<MealItem[]>([]);
+  const [mealList, setMealList] = useState<MealItem[]>(DUMMY_MEAL_LIST);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -92,7 +134,6 @@ const HomePage = () => {
           getMealList(currentDateString, typesToFetch[1]),
         ]);
 
-        // 생성일(createdAt)이 있는 경우 최신순(내림차순) 정렬
         const combined = [...normalData, ...selfData].sort((a: MealItem, b: MealItem) => {
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.applyId;
           const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.applyId;
@@ -147,7 +188,6 @@ const HomePage = () => {
   };
 
   const handleApplyClick = (): void => {
-    // 💡 변경점: 조회 중인 날짜와 무관하게, 항상 '현재 시각'을 기준으로 신청 페이지로 이동
     const now = new Date();
     const todayString = toDateParam(now);
     const currentMeal = getDefaultMealType();
