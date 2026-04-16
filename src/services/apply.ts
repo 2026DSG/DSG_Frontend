@@ -24,13 +24,12 @@ export const getApplyList = async (meal?: string): Promise<Applicant[]> => {
       response?: { status?: number; data?: { message?: string } };
     };
     const status = axiosErr?.response?.status;
-    const message = axiosErr?.response?.data?.message ?? "알 수 없는 오류";
 
     if (status === 400) {
       return [];
     }
 
-    throw new Error(`[${status}] ${message}`);
+    throw new Error(`[${status}] 알 수 없는 오류`);
   }
 };
 
