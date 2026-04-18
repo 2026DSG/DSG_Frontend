@@ -12,10 +12,16 @@ export interface Applicant {
 }
 
 // 신청자 전체 조회
-export const getApplyList = async (meal?: string): Promise<Applicant[]> => {
+export const getApplyList = async (
+  meal?: string,
+  date?: string,
+): Promise<Applicant[]> => {
   try {
     const res = await instance.get("/admin/apply", {
-      params: meal ? { meal } : {},
+      params: {
+        meal,
+        date,
+      },
     });
     const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
     return list;

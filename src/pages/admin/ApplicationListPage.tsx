@@ -35,16 +35,14 @@ const ApplicationListPage = () => {
   };
 
   useEffect(() => {
-    getApplyList()
+    const date = selectedDate.toLocaleDateString("sv-SE");
+
+    getApplyList(undefined, date)
       .then(setAllApplicantList)
       .catch(() => alert("신청자 목록 조회에 실패했습니다."));
-  }, []);
+  }, [selectedDate]);
 
-  const applicantList = allApplicantList.filter((a) => {
-    const createdDate = a.createdAt.slice(0, 10);
-    const selected = selectedDate.toLocaleDateString("sv-SE");
-    return createdDate === selected;
-  });
+  const applicantList = allApplicantList;
 
   const goToPrevDay = () => {
     setSelectedDate((prev) => {
