@@ -50,18 +50,41 @@ const TeacherListPage = () => {
       await deleteTeacher(id);
       alert("삭제되었습니다.");
       fetchTeacherList();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      alert("삭제에 실패했습니다.");
+
+      const apiError = err as {
+        response?: { status?: number; data?: { message?: string } };
+      };
+      const status = apiError?.response?.status;
+
+      if (status === 404) {
+        alert(
+          apiError?.response?.data?.message ?? "존재하지 않는 교직원입니다.",
+        );
+        fetchTeacherList();
+      } else {
+        alert("삭제에 실패했습니다.");
+      }
     }
   };
 
   const handleDownload = async () => {
     try {
       await downloadTeacherExcel();
-    } catch (err) {
-      console.error(err);
-      alert("다운로드에 실패했습니다.");
+    } catch (err: unknown) {
+      const apiError = err as {
+        response?: { status?: number; data?: { message?: string } };
+      };
+      const status = apiError?.response?.status;
+
+      if (status === 404) {
+        alert(
+          apiError?.response?.data?.message ?? "교직원 정보가 비어있습니다.",
+        );
+      } else {
+        alert("다운로드에 실패했습니다.");
+      }
     }
   };
 

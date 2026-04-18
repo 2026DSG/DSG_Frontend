@@ -13,11 +13,24 @@ export interface Applicant {
 
 // 신청자 전체 조회
 export const getApplyList = async (meal?: string): Promise<Applicant[]> => {
-  const res = await instance.get("/admin/apply", {
-    params: meal ? { meal } : {},
-  });
-  const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
-  return list;
+  try {
+    const res = await instance.get("/admin/apply", {
+      params: meal ? { meal } : {},
+    });
+    const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+    return list;
+  } catch (err: unknown) {
+    const axiosErr = err as {
+      response?: { status?: number; data?: { message?: string } };
+    };
+    const status = axiosErr?.response?.status;
+
+    if (status === 400) {
+      return [];
+    }
+
+    throw new Error(`[${status}] 알 수 없는 오류`);
+  }
 };
 
 // 월별 엑셀 출력
