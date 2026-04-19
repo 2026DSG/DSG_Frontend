@@ -34,7 +34,6 @@ const toDateParam = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// 신청 일시 포맷 함수 (YYYY-MM-DD  HH:mm)
 const formatDateTime = (dateString: string): string => {
   const date = new Date(dateString);
   const year = date.getFullYear();
@@ -174,7 +173,9 @@ const HomePage = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {mealList.length === 0 ? (
+              {isLoading ? (
+                <Tr><EmptyTd colSpan={6}>로딩 중...</EmptyTd></Tr>
+              ) : mealList.length === 0 ? (
                 <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
               ) : (
                 mealList.map((item) => (
