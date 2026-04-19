@@ -42,13 +42,7 @@ const formatDateTime = (dateString: string): string => {
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-<<<<<<< Updated upstream
-  
-  // HTML에서 연속된 공백이 무시되지 않도록 유니코드 공백(\u00A0)을 여러 개 사용했습니다.
-  return `${year}-${month}-${day}\u00A0\u00A0\u00A0\u00A0\u00A0${hours}:${minutes}`;
-=======
   return `${year}-${month}-${day}    ${hours}:${minutes}`;
->>>>>>> Stashed changes
 };
 
 const getDefaultMealType = (): BaseMealType => {
@@ -69,27 +63,14 @@ const HomePage = () => {
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
-<<<<<<< Updated upstream
-  // 실전용에서는 초기값을 빈 배열로 둡니다.
-=======
->>>>>>> Stashed changes
   const [mealList, setMealList] = useState<MealItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
-  // 로그인 상태 관리 (로컬스토리지의 토큰 존재 여부 확인)
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-
   useEffect(() => {
-<<<<<<< Updated upstream
-    // 페이지 로드 시 토큰 확인 (키 이름은 프로젝트 환경에 맞춰 "accessToken" 등으로 수정하세요)
-    const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token);
-=======
     setIsLoggedIn(!!localStorage.getItem("accessToken"));
->>>>>>> Stashed changes
 
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
@@ -173,18 +154,9 @@ const HomePage = () => {
             <MealToggleButton active={mealType === "LUNCH"} onClick={() => handleMealTypeChange("LUNCH")}>중식</MealToggleButton>
             <MealToggleButton active={mealType === "DINNER"} onClick={() => handleMealTypeChange("DINNER")}>석식</MealToggleButton>
           </MealToggleGroup>
-<<<<<<< Updated upstream
-
-          {/* 로그인 하지 않았을 때만 로그인 버튼 표시 */}
-          {!isLoggedIn && (
-            <LoginButton onClick={() => navigate("/login")}>
-              <img src={user as string} alt="유저 아이콘" />
-              Login
-=======
           {!isLoggedIn && (
             <LoginButton onClick={() => navigate("/login")}>
               <img src={user} alt="user" /> Login
->>>>>>> Stashed changes
             </LoginButton>
           )}
         </ControlRow>
