@@ -52,12 +52,18 @@ const ApplicationTeacherPage = () => {
         <TableWrapper>
           <Table>
             <Thead>
-              <Tr><Th>이름</Th><Th>부서</Th><Th>직위</Th></Tr>
+              <Tr>
+                <Th>이름</Th>
+                <Th>부서</Th>
+                <Th>직위</Th>
+              </Tr>
             </Thead>
             <Tbody>
               {filteredTeachers.map(t => (
                 <Tr key={t.id} isSelected={selectedId === t.id} onClick={() => setSelectedId(t.id)}>
-                  <Td>{t.name}</Td><Td>{t.department}</Td><Td>{t.position}</Td>
+                  <Td>{t.name}</Td>
+                  <Td>{t.department}</Td>
+                  <Td>{t.position}</Td>
                 </Tr>
               ))}
             </Tbody>
@@ -73,18 +79,101 @@ const ApplicationTeacherPage = () => {
   );
 };
 
-const Body = styled.div` width: 100vw; height: 100vh; `;
-const TotalContainer = styled.div` display: flex; flex-direction: column; margin: 0 120px; `;
-const SearchRow = styled.div` margin-top: 30px; display: flex; justify-content: flex-end; `;
-const SearchInputWrapper = styled.div` display: flex; align-items: center; border: 1px solid #ccc; border-radius: 8px; padding: 8px 16px; width: 300px; img { width: 20px; margin-right: 10px; } input { border: none; outline: none; font-size: 18px; width: 100%; } `;
-const TableWrapper = styled.div` margin-top: 20px; height: 400px; overflow-y: auto; border: 1px solid #eee; `;
-const Table = styled.table` width: 100%; border-collapse: collapse; `;
-const Thead = styled.thead` background: #444f61; color: white; position: sticky; top: 0; `;
-const Th = styled.th` padding: 15px; font-size: 20px; `;
+// 스타일 컴포넌트
+const Body = styled.div`
+  width: 100vw;
+  height: 100vh;
+`;
+
+const TotalContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 0 120px;
+`;
+
+const SearchRow = styled.div`
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const SearchInputWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px 16px;
+  width: 300px;
+  
+  img {
+    width: 20px;
+    margin-right: 10px;
+  }
+  
+  input {
+    border: none;
+    outline: none;
+    font-size: 18px;
+    width: 100%;
+  }
+`;
+
+const TableWrapper = styled.div`
+  margin-top: 20px;
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+`;
+
+const Thead = styled.thead`
+  background: #444f61;
+  color: white;
+  position: sticky;
+  top: 0;
+`;
+
+const Th = styled.th`
+  padding: 15px;
+  font-size: 20px;
+`;
+
 const Tbody = styled.tbody``;
-const Tr = styled.tr<{ isSelected?: boolean }>` cursor: pointer; background: ${props => props.isSelected ? "#d1d5db" : "white"}; &:hover { background: #f3f4f6; } `;
-const Td = styled.td` padding: 15px; text-align: center; border-bottom: 1px solid #eee; font-size: 18px; `;
-const ButtonBox = styled.div` display: flex; justify-content: center; margin-top: 40px; `;
-const SubmitButton = styled.button` padding: 20px 100px; font-size: 28px; background: #444f61; color: white; border: none; border-radius: 12px; cursor: pointer; `;
+
+const Tr = styled.tr<{ isSelected?: boolean }>`
+  cursor: pointer;
+  background: ${props => props.isSelected ? "#d1d5db" : "white"};
+  
+  &:hover {
+    background: #f3f4f6;
+  }
+`;
+
+const Td = styled.td`
+  padding: 15px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  font-size: 18px;
+`;
+
+const ButtonBox = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+`;
+
+const SubmitButton = styled.button`
+  padding: 20px 100px;
+  font-size: 28px;
+  background: #444f61;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+`;
 
 export default ApplicationTeacherPage;

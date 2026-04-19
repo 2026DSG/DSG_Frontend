@@ -87,21 +87,121 @@ const ApplicationReasonPage = () => {
   );
 };
 
-const Body = styled.div` width: 100vw; height: 100vh; background-color: #fff; `;
-const TotalContainer = styled.div` display: flex; flex-direction: column; margin: 0 120px; `;
-const ContentWrapper = styled.div` display: flex; flex-direction: column; align-items: center; margin-top: 40px; `;
-const TopRow = styled.div` display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 60px; `;
-const TimeDisplay = styled.div` font-size: 24px; font-weight: bold; `;
-const MealTypeText = styled.h1` font-size: 48px; margin: 0; `;
-const MealToggleGroup = styled.div` display: flex; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; `;
-const MealToggleButton = styled.button<{ active: boolean }>` padding: 10px 20px; border: none; cursor: pointer; background: ${props => props.active ? "#444f61" : "#fff"}; color: ${props => props.active ? "#fff" : "#444f61"}; `;
-const InputSection = styled.div` width: 100%; max-width: 600px; `;
-const Label = styled.div` font-size: 24px; font-weight: bold; margin-bottom: 16px; `;
-const SelectGroup = styled.div` display: flex; gap: 12px; `;
-const SelectButton = styled.button<{ active: boolean }>` flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background: ${props => props.active ? "#444f61" : "#fff"}; color: ${props => props.active ? "#fff" : "#444f61"}; font-size: 18px; `;
-const ReasonGrid = styled.div` display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; `;
-const ReasonChip = styled.div<{ selected: boolean }>` padding: 15px; text-align: center; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background: ${props => props.selected ? "#eef0f4" : "#fff"}; font-size: 18px; `;
-const CustomInput = styled.input` width: 100%; padding: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 18px; box-sizing: border-box; `;
-const NextButton = styled.button` margin-top: 60px; padding: 20px 100px; font-size: 28px; background: #444f61; color: white; border: none; border-radius: 12px; cursor: pointer; `;
+// 스타일 컴포넌트
+const Body = styled.div`
+  width: 100vw;
+  height: 100vh;
+  background-color: #fff;
+`;
+
+const TotalContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 0 120px;
+`;
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 40px;
+`;
+
+const TopRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 60px;
+`;
+
+const TimeDisplay = styled.div`
+  font-size: 24px;
+  font-weight: bold;
+`;
+
+const MealTypeText = styled.h1`
+  font-size: 48px;
+  margin: 0;
+`;
+
+const MealToggleGroup = styled.div`
+  display: flex;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+`;
+
+const MealToggleButton = styled.button<{ active: boolean }>`
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  background: ${props => props.active ? "#444f61" : "#fff"};
+  color: ${props => props.active ? "#fff" : "#444f61"};
+`;
+
+const InputSection = styled.div`
+  width: 100%;
+  max-width: 600px;
+`;
+
+const Label = styled.div`
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 16px;
+`;
+
+const SelectGroup = styled.div`
+  display: flex;
+  gap: 12px;
+`;
+
+const SelectButton = styled.button<{ active: boolean }>`
+  flex: 1;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  background: ${props => props.active ? "#444f61" : "#fff"};
+  color: ${props => props.active ? "#fff" : "#444f61"};
+  font-size: 18px;
+`;
+
+const ReasonGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+`;
+
+const ReasonChip = styled.div<{ selected: boolean }>`
+  padding: 15px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  background: ${props => props.selected ? "#eef0f4" : "#fff"};
+  font-size: 18px;
+`;
+
+const CustomInput = styled.input`
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 18px;
+  box-sizing: border-box;
+`;
+
+const NextButton = styled.button`
+  margin-top: 60px;
+  padding: 20px 100px;
+  font-size: 28px;
+  background: #444f61;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+`;
 
 export default ApplicationReasonPage;
