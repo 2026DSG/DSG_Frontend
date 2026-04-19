@@ -10,12 +10,7 @@ import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
 import { getMealList, deleteMealById } from "../../services/mealService";
-import type { MealType, MealItem as BaseMealItem } from "../../services/mealService";
-
-// 백엔드에서 추가한 createdAt 필드를 프론트엔드 타입에 반영합니다.
-interface MealItem extends BaseMealItem {
-  createdAt?: string;
-}
+import type { MealType, MealItem } from "../../services/mealService";
 
 type BaseMealType = "LUNCH" | "DINNER";
 
@@ -39,29 +34,27 @@ const toDateParam = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-const formatDateTime = (dateString?: string): string => {
-  if (!dateString) return "-";
+// 신청 일시 포맷 함수 (YYYY-MM-DD  HH:mm)
+const formatDateTime = (dateString: string): string => {
   const date = new Date(dateString);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
+<<<<<<< Updated upstream
   
   // HTML에서 연속된 공백이 무시되지 않도록 유니코드 공백(\u00A0)을 여러 개 사용했습니다.
   return `${year}-${month}-${day}\u00A0\u00A0\u00A0\u00A0\u00A0${hours}:${minutes}`;
+=======
+  return `${year}-${month}-${day}    ${hours}:${minutes}`;
+>>>>>>> Stashed changes
 };
 
 const getDefaultMealType = (): BaseMealType => {
   const now = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
-
-  if (totalMinute >= 13 * 60 + 30) {
-    return "DINNER";
-  } else if (totalMinute >= 6 * 60 + 40) {
-    return "LUNCH";
-  }
-
+  if (totalMinute >= 13 * 60 + 30) return "DINNER";
   return "LUNCH";
 };
 
@@ -76,40 +69,47 @@ const HomePage = () => {
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
+<<<<<<< Updated upstream
   // 실전용에서는 초기값을 빈 배열로 둡니다.
+=======
+>>>>>>> Stashed changes
   const [mealList, setMealList] = useState<MealItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   // 로그인 상태 관리 (로컬스토리지의 토큰 존재 여부 확인)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
+<<<<<<< Updated upstream
     // 페이지 로드 시 토큰 확인 (키 이름은 프로젝트 환경에 맞춰 "accessToken" 등으로 수정하세요)
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
+=======
+    setIsLoggedIn(!!localStorage.getItem("accessToken"));
+>>>>>>> Stashed changes
 
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
-        const typesToFetch: MealType[] =
-          mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
-
-        const [normalData, selfData] = await Promise.all([
-          getMealList(currentDateString, typesToFetch[0]),
-          getMealList(currentDateString, typesToFetch[1]),
+        const types: MealType[] = mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
+        
+        // 두 가지 유형(초과/개인)을 병렬로 조회
+        const [res1, res2] = await Promise.all([
+          getMealList(currentDateString, types[0]),
+          getMealList(currentDateString, types[1]),
         ]);
 
-        const combined = [...normalData, ...selfData].sort((a: MealItem, b: MealItem) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.applyId;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.applyId;
-          return dateB - dateA;
-        });
+        // 최신 신청 순(createdAt 내림차순)으로 정렬
+        const combined = [...res1, ...res2].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
 
         setMealList(combined);
       } catch {
-        showToast("데이터를 불러오지 못했습니다.", "error");
+        showToast("데이터를 불러오는데 실패했습니다.", "error");
       } finally {
         setIsLoading(false);
       }
@@ -118,56 +118,37 @@ const HomePage = () => {
     loadData();
   }, [currentDateString, mealType]);
 
-  const showToast = (text: string, type: ToastType): void => {
+  const showToast = (text: string, type: ToastType) => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleDateChange = (step: number): void => {
+  const handleDateChange = (step: number) => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() + step);
     setSearchParams({ date: toDateParam(newDate), meal: mealType });
   };
 
-  const handleMealTypeChange = (newMeal: BaseMealType): void => {
+  const handleMealTypeChange = (newMeal: BaseMealType) => {
     setSearchParams({ date: currentDateString, meal: newMeal });
   };
 
-  const handleDeleteClick = (applyId: number): void => {
-    if (!applyId) {
-      showToast("유효하지 않은 항목입니다.", "error");
-      return;
-    }
-    setDeletingId(applyId);
-  };
-
-  const handleDeleteConfirm = async (): Promise<void> => {
+  const handleDeleteConfirm = async () => {
     if (deletingId === null) return;
     try {
       await deleteMealById(deletingId);
-      setMealList((prev) => prev.filter((item) => item.applyId !== deletingId));
+      setMealList(prev => prev.filter(item => item.applyId !== deletingId));
       showToast("삭제되었습니다.", "success");
     } catch {
-      showToast("삭제에 실패했습니다.", "error");
+      showToast("삭제 실패했습니다.", "error");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleApplyClick = (): void => {
-    const now = new Date();
-    const todayString = toDateParam(now);
-    const currentMeal = getDefaultMealType();
-
-    navigate(`/apply/reason?meal=${currentMeal}&date=${todayString}`);
-  };
-
   return (
     <Body>
-      {toast !== null && (
-        <ToastMessage type={toast.type}>{toast.text}</ToastMessage>
-      )}
-
+      {toast && <ToastMessage type={toast.type}>{toast.text}</ToastMessage>}
       {deletingId !== null && (
         <ModalOverlay>
           <ModalBox>
@@ -182,34 +163,28 @@ const HomePage = () => {
 
       <TotalContainer>
         <Header title="메인페이지" />
-
         <ControlRow>
           <YearNavigator>
-            <img src={ArrowLeft as string} alt="이전 날짜" onClick={() => handleDateChange(-1)} />
+            <img src={ArrowLeft} alt="prev" onClick={() => handleDateChange(-1)} />
             <Years>{formatDate(currentDate)}</Years>
-            <img src={ArrowRight as string} alt="이후 날짜" onClick={() => handleDateChange(1)} />
+            <img src={ArrowRight} alt="next" onClick={() => handleDateChange(1)} />
           </YearNavigator>
-
           <MealToggleGroup>
-            <MealToggleButton
-              active={mealType === "LUNCH"}
-              onClick={() => handleMealTypeChange("LUNCH")}
-            >
-              중식
-            </MealToggleButton>
-            <MealToggleButton
-              active={mealType === "DINNER"}
-              onClick={() => handleMealTypeChange("DINNER")}
-            >
-              석식
-            </MealToggleButton>
+            <MealToggleButton active={mealType === "LUNCH"} onClick={() => handleMealTypeChange("LUNCH")}>중식</MealToggleButton>
+            <MealToggleButton active={mealType === "DINNER"} onClick={() => handleMealTypeChange("DINNER")}>석식</MealToggleButton>
           </MealToggleGroup>
+<<<<<<< Updated upstream
 
           {/* 로그인 하지 않았을 때만 로그인 버튼 표시 */}
           {!isLoggedIn && (
             <LoginButton onClick={() => navigate("/login")}>
               <img src={user as string} alt="유저 아이콘" />
               Login
+=======
+          {!isLoggedIn && (
+            <LoginButton onClick={() => navigate("/login")}>
+              <img src={user} alt="user" /> Login
+>>>>>>> Stashed changes
             </LoginButton>
           )}
         </ControlRow>
@@ -226,30 +201,29 @@ const HomePage = () => {
                 <Th></Th>
               </Tr>
             </Thead>
-
             <Tbody>
-              {!isLoading && mealList.length === 0 && (
+              {mealList.length === 0 ? (
                 <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
+              ) : (
+                mealList.map((item) => (
+                  <Tr key={item.applyId}>
+                    <Td>{item.teacherName}</Td>
+                    <Td>{item.reason}</Td>
+                    <Td>{item.department}</Td>
+                    <Td>{item.position}</Td>
+                    <Td>{formatDateTime(item.createdAt)}</Td>
+                    <Td>
+                      <DeleteButton onClick={() => setDeletingId(item.applyId)}>삭제</DeleteButton>
+                    </Td>
+                  </Tr>
+                ))
               )}
-
-              {!isLoading && mealList.map((item: MealItem) => (
-                <Tr key={item.applyId}>
-                  <Td>{item.teacherName}</Td>
-                  <Td>{item.reason}</Td>
-                  <Td>{item.department}</Td>
-                  <Td>{item.position}</Td>
-                  <Td>{formatDateTime(item.createdAt)}</Td>
-                  <Td>
-                    <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
-                  </Td>
-                </Tr>
-              ))}
             </Tbody>
           </Table>
         </TableWrapper>
 
         <ButtonBox>
-          <ApplyButton onClick={handleApplyClick}>신청하기</ApplyButton>
+          <ApplyButton onClick={() => navigate(`/apply/reason?meal=${mealType}&date=${currentDateString}`)}>신청하기</ApplyButton>
         </ButtonBox>
       </TotalContainer>
       <Footer />
@@ -257,219 +231,32 @@ const HomePage = () => {
   );
 };
 
-interface MealToggleButtonProps {
-  active: boolean;
-}
-interface ToastMessageProps {
-  type: ToastType;
-}
-
-const Body = styled.div`
-  width: 100vw;
-  height: 100vh;
-`;
-
-const TotalContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 0px 120px;
-`;
-
-const ControlRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-top: 34px;
-`;
-
-const YearNavigator = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 22px;
-
-  img {
-    width: 8px;
-    cursor: pointer;
-  }
-`;
-
-const Years = styled.span`
-  font-size: 20px;
-  padding-bottom: 6px;
-`;
-
-const MealToggleGroup = styled.div`
-  display: flex;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  overflow: hidden;
-`;
-
-const MealToggleButton = styled.button<MealToggleButtonProps>`
-  padding: 8px 16px;
-  font-size: 20px;
-  border: none;
-  cursor: pointer;
-  background-color: ${({ active }) => (active ? "#444f61" : "white")};
-  color: ${({ active }) => (active ? "white" : "#444f61")};
-`;
-
-const LoginButton = styled.button`
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 20px;
-  font-size: 20px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background-color: white;
-  cursor: pointer;
-`;
-
-const TableWrapper = styled.div`
-  margin-top: 21px;
-  max-height: 370px;
-  height: 370px;
-  overflow-y: auto;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-`;
-
-const Thead = styled.thead`
-  background-color: #444f61;
-  color: white;
-`;
-
-const Tbody = styled.tbody`
-  tr:nth-of-type(odd) {
-    background-color: white;
-  }
-  tr:nth-of-type(even) {
-    background-color: #eef0f4;
-  }
-`;
-
+// 스타일 컴포넌트 생략 (기존과 동일하되 가독성을 위해 구조 유지)
+const Body = styled.div` width: 100vw; height: 100vh; `;
+const TotalContainer = styled.div` display: flex; flex-direction: column; margin: 0px 120px; `;
+const ControlRow = styled.div` display: flex; align-items: center; gap: 20px; margin-top: 34px; `;
+const YearNavigator = styled.div` display: flex; align-items: center; gap: 22px; img { width: 8px; cursor: pointer; } `;
+const Years = styled.span` font-size: 20px; padding-bottom: 6px; `;
+const MealToggleGroup = styled.div` display: flex; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; `;
+const MealToggleButton = styled.button<{ active: boolean }>` padding: 8px 16px; font-size: 20px; border: none; cursor: pointer; background-color: ${({ active }) => (active ? "#444f61" : "white")}; color: ${({ active }) => (active ? "white" : "#444f61")}; `;
+const LoginButton = styled.button` margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 8px 20px; font-size: 20px; border: 1px solid #ccc; border-radius: 6px; background-color: white; cursor: pointer; `;
+const TableWrapper = styled.div` margin-top: 21px; height: 370px; overflow-y: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); `;
+const Table = styled.table` width: 100%; border-collapse: separate; border-spacing: 0; `;
+const Thead = styled.thead` background-color: #444f61; color: white; `;
+const Tbody = styled.tbody` tr:nth-of-type(odd) { background-color: white; } tr:nth-of-type(even) { background-color: #eef0f4; } `;
 const Tr = styled.tr``;
-
-const Th = styled.th`
-  background-color: #444f61;
-  border-bottom: 2px solid #ccc;
-  padding: 12px;
-  font-size: 24px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-`;
-
-const Td = styled.td`
-  border-right: 1px solid #e0e0e0;
-  padding: 12px;
-  font-size: 24px;
-  text-align: center;
-`;
-
-const EmptyTd = styled.td`
-  padding: 40px;
-  font-size: 18px;
-  text-align: center;
-  color: #888;
-`;
-
-const DeleteButton = styled.button`
-  font-size: 20px;
-  padding: 5px 29px;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  background-color: #444f61;
-  cursor: pointer;
-`;
-
-const ButtonBox = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 32px;
-`;
-
-const ApplyButton = styled.button`
-  padding: 20px 120px;
-  font-size: 32px;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  background-color: #444f61;
-  cursor: pointer;
-`;
-
-const ToastMessage = styled.div<ToastMessageProps>`
-  position: fixed;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  padding: 16px 28px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-  background-color: ${({ type }) => (type === "success" ? "#27ae60" : "#e74c3c")};
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9000;
-`;
-
-const ModalBox = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 36px 48px;
-  text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-`;
-
-const ModalMessage = styled.p`
-  font-size: 22px;
-  color: #222;
-  margin: 0 0 28px;
-`;
-
-const ModalButtons = styled.div`
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-`;
-
-const CancelButton = styled.button`
-  padding: 12px 36px;
-  font-size: 18px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: white;
-  color: #444;
-  cursor: pointer;
-`;
-
-const ConfirmDeleteButton = styled.button`
-  padding: 12px 36px;
-  font-size: 18px;
-  border: none;
-  border-radius: 8px;
-  background: #444f61;
-  color: white;
-  cursor: pointer;
-`;
+const Th = styled.th` padding: 12px; font-size: 24px; position: sticky; top: 0; z-index: 10; background-color: #444f61; `;
+const Td = styled.td` padding: 12px; font-size: 24px; text-align: center; border-right: 1px solid #e0e0e0; `;
+const EmptyTd = styled.td` padding: 40px; text-align: center; color: #888; font-size: 20px; `;
+const DeleteButton = styled.button` font-size: 20px; padding: 5px 29px; border: none; border-radius: 6px; color: white; background-color: #444f61; cursor: pointer; `;
+const ButtonBox = styled.div` display: flex; justify-content: center; margin-top: 32px; `;
+const ApplyButton = styled.button` padding: 20px 120px; font-size: 32px; color: white; border: none; border-radius: 12px; background-color: #444f61; cursor: pointer; `;
+const ToastMessage = styled.div<{ type: string }>` position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 16px 28px; border-radius: 12px; color: white; background-color: ${({ type }) => (type === "success" ? "#27ae60" : "#e74c3c")}; `;
+const ModalOverlay = styled.div` position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 9000; `;
+const ModalBox = styled.div` background: white; border-radius: 12px; padding: 36px 48px; text-align: center; `;
+const ModalMessage = styled.p` font-size: 22px; margin-bottom: 28px; `;
+const ModalButtons = styled.div` display: flex; gap: 16px; justify-content: center; `;
+const CancelButton = styled.button` padding: 10px 30px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; `;
+const ConfirmDeleteButton = styled.button` padding: 10px 30px; background: #444f61; color: white; border: none; border-radius: 8px; cursor: pointer; `;
 
 export default HomePage;

@@ -4,366 +4,87 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SearchIcon from "../../assets/Search.svg";
-
-import { getTeacherList } from "../../services/teacher";
-import type { Teacher } from "../../services/teacher";
-import { postMealApplication } from "../../services/mealService";
-import type { MealType } from "../../services/mealService";
-
-const MEAL_LABEL: Record<MealType, string> = {
-  LUNCH: "초과근무 | 중식",
-  LUNCH_SELF: "개인부담 | 중식",
-  DINNER: "초과근무 | 석식",
-  DINNER_SELF: "개인부담 | 석식",
-};
-
-const CHOSUNG_LIST = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
-
-const getChosung = (char: string): string => {
-  const code = char.charCodeAt(0) - 0xac00;
-  if (code < 0 || code > 11171) return char;
-  return CHOSUNG_LIST[Math.floor(code / (21 * 28))];
-};
-
-const matchesChosung = (name: string, query: string): boolean => {
-  if (!query) return true;
-  for (let i = 0; i < query.length; i++) {
-    if (i >= name.length) return false;
-    if (getChosung(name[i]) !== query[i]) return false;
-  }
-  return true;
-};
-
-const KEYBOARD_ROWS = [
-  ["ㄱ", "ㄴ", "ㄷ"],
-  ["ㄹ", "ㅁ", "ㅂ"],
-  ["ㅅ", "ㅇ", "ㅈ"],
-  ["ㅊ", "ㅋ", "ㅌ"],
-  ["ㅍ", "ㅎ", "←"],
-];
+import { getAdminTeacherList, postMealApplication } from "../../services/mealService";
+import type { TeacherItem, MealType } from "../../services/mealService";
 
 const ApplicationTeacherPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const mealParam = (searchParams.get("meal") ?? "DINNER") as MealType;
-  const dateParam = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+  const meal = searchParams.get("meal") as MealType;
+  const date = searchParams.get("date") || "";
+  const reason = searchParams.get("reason") || "";
 
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [teachers, setTeachers] = useState<TeacherItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [chosungQuery, setChosungQuery] = useState<string>("");
 
   useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getTeacherList();
-        setTeachers(data);
-      } catch {
-        alert("교직원 목록을 불러오지 못했습니다.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
+    getAdminTeacherList().then(setTeachers).catch(() => alert("교사 목록 로딩 실패"));
   }, []);
 
-  const filteredTeachers = useMemo(
-    () => teachers.filter((t) => matchesChosung(t.name, chosungQuery)),
-    [teachers, chosungQuery]
-  );
+  const filteredTeachers = useMemo(() => {
+    return teachers.filter(t => t.name.includes(searchQuery) || t.department.includes(searchQuery));
+  }, [teachers, searchQuery]);
 
-  const handleKeyPress = (key: string) => {
-    if (key === "←") {
-      setChosungQuery((prev) => prev.slice(0, -1));
-    } else {
-      setChosungQuery((prev) => prev + key);
-    }
-    setSelectedId(null);
-  };
-
-  const handleApply = async () => {
-    if (selectedId === null || isSubmitting) return;
-    setIsSubmitting(true);
-
-    const extractedReason = MEAL_LABEL[mealParam].split(" | ")[0];
-
+  const handleSubmit = async () => {
+    if (!selectedId) return alert("교사를 선택해주세요.");
     try {
-      await postMealApplication({
-        teacherId: selectedId,
-        meal: mealParam,
-        date: dateParam,
-        reason: extractedReason,
-      });
-
-      const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
-      navigate(`/?date=${dateParam}&meal=${baseMeal}`);
-    } catch (err: any) {
-      const status = err.response?.status;
-      const message = err.response?.data?.message;
-
-      if (status === 400) {
-        alert(message || "입력 정보가 올바르지 않습니다.");
-      } else if (status === 404) {
-        alert("존재하지 않는 교직원입니다.");
-      } else if (status === 409) {
-        alert("해당 날짜에 이미 신청 내역이 존재합니다. (초과근무/개인부담 중복 신청 불가)");
-      } else {
-        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-      }
-      setIsSubmitting(false);
+      await postMealApplication({ teacherId: selectedId, meal, reason, date });
+      alert("신청이 완료되었습니다.");
+      navigate("/");
+    } catch {
+      alert("신청에 실패했습니다.");
     }
   };
 
   return (
     <Body>
-      <ContentWrapper>
-        <TotalContainer>
-          <Header title="교직원 선택" showBack />
-          <TabContainer>
-            <TabButton active={true}>{MEAL_LABEL[mealParam]}</TabButton>
-          </TabContainer>
+      <TotalContainer>
+        <Header title="교사 선택" />
+        <SearchRow>
+          <SearchInputWrapper>
+            <img src={SearchIcon} alt="search" />
+            <input placeholder="이름 또는 부서 검색" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+          </SearchInputWrapper>
+        </SearchRow>
 
-          <MainContent>
-            <SearchSection>
-              <SearchInputWrapper>
-                <StyledInput
-                  type="text"
-                  readOnly
-                  placeholder="초성으로 검색해주세요."
-                  value={chosungQuery}
-                />
-                <img src={SearchIcon} alt="search" width={20} height={20} />
-              </SearchInputWrapper>
+        <TableWrapper>
+          <Table>
+            <Thead>
+              <Tr><Th>이름</Th><Th>부서</Th><Th>직위</Th></Tr>
+            </Thead>
+            <Tbody>
+              {filteredTeachers.map(t => (
+                <Tr key={t.id} isSelected={selectedId === t.id} onClick={() => setSelectedId(t.id)}>
+                  <Td>{t.name}</Td><Td>{t.department}</Td><Td>{t.position}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </TableWrapper>
 
-              <KeyboardContainer>
-                {KEYBOARD_ROWS.map((row, rowIdx) => (
-                  <KeyboardRow key={rowIdx}>
-                    {row.map((key) => (
-                      <KeyButton key={key} onClick={() => handleKeyPress(key)}>
-                        {key}
-                      </KeyButton>
-                    ))}
-                  </KeyboardRow>
-                ))}
-              </KeyboardContainer>
-            </SearchSection>
-
-            <TableSection>
-              <TableWrapper>
-                <Table>
-                  <Thead>
-                    <tr>
-                      <Th>이름</Th>
-                      <Th>부서</Th>
-                    </tr>
-                  </Thead>
-                  <Tbody>
-                    {isLoading && (
-                      <tr>
-                        <StatusTd colSpan={2}>불러오는 중...</StatusTd>
-                      </tr>
-                    )}
-                    {!isLoading && filteredTeachers.length === 0 && (
-                      <tr>
-                        <StatusTd colSpan={2}>검색 결과가 없습니다.</StatusTd>
-                      </tr>
-                    )}
-                    {!isLoading &&
-                      filteredTeachers.map((teacher) => (
-                        <Tr
-                          key={teacher.id}
-                          isSelected={selectedId === teacher.id}
-                          onClick={() => {
-                            setSelectedId(teacher.id);
-                          }}
-                        >
-                          <Td>{teacher.name}</Td>
-                          <Td>{teacher.department}</Td>
-                        </Tr>
-                      ))}
-                  </Tbody>
-                </Table>
-              </TableWrapper>
-
-              <ButtonBox>
-                <ApplyButton
-                  active={selectedId !== null}
-                  disabled={selectedId === null || isSubmitting}
-                  onClick={handleApply}
-                >
-                  {isSubmitting ? "신청 중..." : "신청하기"}
-                </ApplyButton>
-              </ButtonBox>
-            </TableSection>
-          </MainContent>
-        </TotalContainer>
-      </ContentWrapper>
+        <ButtonBox>
+          <SubmitButton onClick={handleSubmit}>신청 완료</SubmitButton>
+        </ButtonBox>
+      </TotalContainer>
       <Footer />
     </Body>
   );
 };
 
-const Body = styled.div`
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #ffffff;
-  overflow: hidden;
-`;
-
-const ContentWrapper = styled.div`
-  flex: 1;
-`;
-
-const TotalContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 0px 120px;
-`;
-
-const TabContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-`;
-
-const TabButton = styled.span<{ active: boolean }>`
-  font-size: 18px;
-  font-weight: 400;
-  color: #000000;
-`;
-
-const MainContent = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 50px;
-  margin-top: 8px;
-`;
-
-const SearchSection = styled.div`
-  width: 300px;
-`;
-
-const SearchInputWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  border: 1px solid #e5e5e5;
-  border-radius: 50px;
-  padding: 12px 18px;
-  background-color: #fcfcfc;
-`;
-
-const StyledInput = styled.input`
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 16px;
-  background: transparent;
-`;
-
-const KeyboardContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 25px;
-`;
-
-const KeyboardRow = styled.div`
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-`;
-
-const KeyButton = styled.button`
-  width: 85px;
-  height: 70px;
-  background-color: #ffffff;
-  border: 1px solid #eeeeee;
-  border-radius: 8px;
-  font-size: 24px;
-  cursor: pointer;
-`;
-
-const TableSection = styled.div`
-  flex: 1;
-`;
-
-const TableWrapper = styled.div`
-  margin-top: 10px;
-  height: 376px;
-  overflow-y: scroll;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-`;
-
-const Thead = styled.thead`
-  background-color: #444f61;
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-`;
-
-const Th = styled.th`
-  background-color: #444f61;
-  padding: 15px;
-  font-size: 22px;
-  border-bottom: 2px solid #ccc;
-`;
-
-const Tbody = styled.tbody`
-  tr:nth-of-type(odd) { background-color: white; }
-  tr:nth-of-type(even) { background-color: #eef0f4; }
-`;
-
-const Tr = styled.tr<{ isSelected?: boolean }>`
-  cursor: pointer;
-  outline: ${(props) => (props.isSelected ? "3px solid #b1b1b1" : "none")};
-  outline-offset: -3px;
-`;
-
-const Td = styled.td`
-  padding: 16px;
-  font-size: 22px;
-  text-align: center;
-  border-right: 1px solid #e0e0e0;
-`;
-
-const StatusTd = styled.td`
-  padding: 40px;
-  font-size: 18px;
-  text-align: center;
-  color: #888;
-`;
-
-const ButtonBox = styled.div`
-  margin-top: 25px;
-  display: flex;
-  justify-content: center;
-`;
-
-const ApplyButton = styled.button<{ active: boolean }>`
-  width: 100%;
-  height: 65px;
-  font-size: 24px;
-  font-weight: 500;
-  color: white;
-  background-color: ${(props) => (props.active ? "#444f61" : "#bec3cc")};
-  border: none;
-  border-radius: 10px;
-  cursor: ${(props) => (props.active ? "pointer" : "not-allowed")};
-`;
+const Body = styled.div` width: 100vw; height: 100vh; `;
+const TotalContainer = styled.div` display: flex; flex-direction: column; margin: 0 120px; `;
+const SearchRow = styled.div` margin-top: 30px; display: flex; justify-content: flex-end; `;
+const SearchInputWrapper = styled.div` display: flex; align-items: center; border: 1px solid #ccc; border-radius: 8px; padding: 8px 16px; width: 300px; img { width: 20px; margin-right: 10px; } input { border: none; outline: none; font-size: 18px; width: 100%; } `;
+const TableWrapper = styled.div` margin-top: 20px; height: 400px; overflow-y: auto; border: 1px solid #eee; `;
+const Table = styled.table` width: 100%; border-collapse: collapse; `;
+const Thead = styled.thead` background: #444f61; color: white; position: sticky; top: 0; `;
+const Th = styled.th` padding: 15px; font-size: 20px; `;
+const Tbody = styled.tbody``;
+const Tr = styled.tr<{ isSelected?: boolean }>` cursor: pointer; background: ${props => props.isSelected ? "#d1d5db" : "white"}; &:hover { background: #f3f4f6; } `;
+const Td = styled.td` padding: 15px; text-align: center; border-bottom: 1px solid #eee; font-size: 18px; `;
+const ButtonBox = styled.div` display: flex; justify-content: center; margin-top: 40px; `;
+const SubmitButton = styled.button` padding: 20px 100px; font-size: 28px; background: #444f61; color: white; border: none; border-radius: 12px; cursor: pointer; `;
 
 export default ApplicationTeacherPage;
