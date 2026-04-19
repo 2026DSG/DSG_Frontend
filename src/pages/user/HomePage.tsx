@@ -47,7 +47,9 @@ const formatDateTime = (dateString?: string): string => {
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}   ${hours}:${minutes}`;
+  
+  // HTML에서 연속된 공백이 무시되지 않도록 유니코드 공백(\u00A0)을 여러 개 사용했습니다.
+  return `${year}-${month}-${day}\u00A0\u00A0\u00A0\u00A0\u00A0${hours}:${minutes}`;
 };
 
 const getDefaultMealType = (): BaseMealType => {
@@ -63,49 +65,6 @@ const getDefaultMealType = (): BaseMealType => {
   return "LUNCH";
 };
 
-const DUMMY_MEAL_LIST: MealItem[] = [
-  {
-    teacherName: "권수현",
-    department: "교무부",
-    createdAt: "2024-01-01T08:30:00",
-    applyId: 1,
-    reason: "초과근무",
-    position: "교사",
-  },
-  {
-    teacherName: "이준호",
-    department: "과학부",
-    createdAt: "2024-01-01T09:10:00",
-    applyId: 2,
-    reason: "개인사유",
-    position: "교사",
-  },
-  {
-    teacherName: "박지영",
-    department: "행정실",
-    createdAt: "2024-01-01T09:45:00",
-    applyId: 3,
-    reason: "야근",
-    position: "행정직",
-  },
-  {
-    teacherName: "최민서",
-    department: "수학부",
-    createdAt: "2024-01-01T10:00:00",
-    applyId: 4,
-    reason: "초과근무",
-    position: "부장교사",
-  },
-  {
-    teacherName: "김태연",
-    department: "국어부",
-    createdAt: "2024-01-01T10:30:00",
-    applyId: 5,
-    reason: "업무처리",
-    position: "교사",
-  },
-];
-
 const HomePage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -117,7 +76,8 @@ const HomePage = () => {
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
-  const [mealList, setMealList] = useState<MealItem[]>(DUMMY_MEAL_LIST);
+  // 실전용에서는 초기값을 빈 배열로 둡니다.
+  const [mealList, setMealList] = useState<MealItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -296,8 +256,6 @@ const HomePage = () => {
     </Body>
   );
 };
-
-// ... 이하 styled components (기존 코드와 동일)
 
 interface MealToggleButtonProps {
   active: boolean;
