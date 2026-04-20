@@ -69,7 +69,9 @@ const HomePage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("accessToken"));
+    // 로그인 토큰 확인
+    const token = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
 
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
@@ -95,7 +97,12 @@ const HomePage = () => {
       }
     };
 
-    loadData();
+    // 토큰이 존재할 때만 데이터를 요청
+    if (token) {
+      loadData();
+    } else {
+      setMealList([]); // 비로그인 시 데이터 초기화
+    }
   }, [currentDateString, mealType]);
 
   const showToast = (text: string, type: ToastType) => {
@@ -173,7 +180,9 @@ const HomePage = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {isLoading ? (
+              {!isLoggedIn ? (
+                <Tr><EmptyTd colSpan={6}>로그인 후 이용 가능합니다.</EmptyTd></Tr>
+              ) : isLoading ? (
                 <Tr><EmptyTd colSpan={6}>로딩 중...</EmptyTd></Tr>
               ) : mealList.length === 0 ? (
                 <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
