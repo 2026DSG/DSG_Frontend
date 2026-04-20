@@ -35,16 +35,23 @@ const ApplicationListPage = () => {
   };
 
   useEffect(() => {
-    getApplyList()
-      .then(setAllApplicantList)
-      .catch(() => alert("신청자 목록 조회에 실패했습니다."));
-  }, []);
+    let cancelled = false;
+    const date = selectedDate.toLocaleDateString("sv-SE");
 
-  const applicantList = allApplicantList.filter((a) => {
-    const createdDate = a.createdAt.slice(0, 10);
-    const selected = selectedDate.toLocaleDateString("sv-SE");
-    return createdDate === selected;
-  });
+    getApplyList(undefined, date)
+      .then((list) => {
+        if (!cancelled) setAllApplicantList(list);
+      })
+      .catch(() => {
+        if (!cancelled) alert("신청자 목록 조회에 실패했습니다.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate]);
+
+  const applicantList = allApplicantList;
 
   const goToPrevDay = () => {
     setSelectedDate((prev) => {

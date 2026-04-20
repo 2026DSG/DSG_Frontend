@@ -10,12 +10,7 @@ import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
 import { getMealList, deleteMealById } from "../../services/mealService";
-import type { MealType, MealItem as BaseMealItem } from "../../services/mealService";
-
-// 백엔드에서 추가한 createdAt 필드를 프론트엔드 타입에 반영합니다.
-interface MealItem extends BaseMealItem {
-  createdAt?: string;
-}
+import type { MealType, MealItem } from "../../services/mealService";
 
 type BaseMealType = "LUNCH" | "DINNER";
 
@@ -29,7 +24,7 @@ const formatDate = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  return `${year} / ${month} / ${day}`;
+  return `${year} / ${month} /  ${day}`;
 };
 
 const toDateParam = (date: Date): string => {
@@ -39,72 +34,22 @@ const toDateParam = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-const formatDateTime = (dateString?: string): string => {
-  if (!dateString) return "-";
+const formatDateTime = (dateString: string): string => {
   const date = new Date(dateString);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}   ${hours}:${minutes}`;
+  return `${year}-${month}-${day}    ${hours}:${minutes}`;
 };
 
 const getDefaultMealType = (): BaseMealType => {
   const now = new Date();
   const totalMinute = now.getHours() * 60 + now.getMinutes();
-
-  if (totalMinute >= 13 * 60 + 30) {
-    return "DINNER";
-  } else if (totalMinute >= 6 * 60 + 40) {
-    return "LUNCH";
-  }
-
+  if (totalMinute >= 13 * 60 + 30) return "DINNER";
   return "LUNCH";
 };
-
-const DUMMY_MEAL_LIST: MealItem[] = [
-  {
-    teacherName: "권수현",
-    department: "교무부",
-    createdAt: "2024-01-01T08:30:00",
-    applyId: 1,
-    reason: "초과근무",
-    position: "교사",
-  },
-  {
-    teacherName: "이준호",
-    department: "과학부",
-    createdAt: "2024-01-01T09:10:00",
-    applyId: 2,
-    reason: "개인사유",
-    position: "교사",
-  },
-  {
-    teacherName: "박지영",
-    department: "행정실",
-    createdAt: "2024-01-01T09:45:00",
-    applyId: 3,
-    reason: "야근",
-    position: "행정직",
-  },
-  {
-    teacherName: "최민서",
-    department: "수학부",
-    createdAt: "2024-01-01T10:00:00",
-    applyId: 4,
-    reason: "초과근무",
-    position: "부장교사",
-  },
-  {
-    teacherName: "김태연",
-    department: "국어부",
-    createdAt: "2024-01-01T10:30:00",
-    applyId: 5,
-    reason: "업무처리",
-    position: "교사",
-  },
-];
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -117,90 +62,76 @@ const HomePage = () => {
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
-  const [mealList, setMealList] = useState<MealItem[]>(DUMMY_MEAL_LIST);
+  const [mealList, setMealList] = useState<MealItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
+
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
-        const typesToFetch: MealType[] =
-          mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
-
-        const [normalData, selfData] = await Promise.all([
-          getMealList(currentDateString, typesToFetch[0]),
-          getMealList(currentDateString, typesToFetch[1]),
+        const types: MealType[] = mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
+        
+        const [res1, res2] = await Promise.all([
+          getMealList(currentDateString, types[0]),
+          getMealList(currentDateString, types[1]),
         ]);
 
-        const combined = [...normalData, ...selfData].sort((a: MealItem, b: MealItem) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.applyId;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.applyId;
-          return dateB - dateA;
-        });
+        const combined = [...res1, ...res2].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
 
         setMealList(combined);
       } catch {
-        showToast("데이터를 불러오지 못했습니다.", "error");
+        showToast("데이터를 불러오는데 실패했습니다.", "error");
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
+    if (token) {
+      loadData();
+    } else {
+      setMealList([]);
+    }
   }, [currentDateString, mealType]);
 
-  const showToast = (text: string, type: ToastType): void => {
+  const showToast = (text: string, type: ToastType) => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleDateChange = (step: number): void => {
+  const handleDateChange = (step: number) => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() + step);
     setSearchParams({ date: toDateParam(newDate), meal: mealType });
   };
 
-  const handleMealTypeChange = (newMeal: BaseMealType): void => {
+  const handleMealTypeChange = (newMeal: BaseMealType) => {
     setSearchParams({ date: currentDateString, meal: newMeal });
   };
 
-  const handleDeleteClick = (applyId: number): void => {
-    if (!applyId) {
-      showToast("유효하지 않은 항목입니다.", "error");
-      return;
-    }
-    setDeletingId(applyId);
-  };
-
-  const handleDeleteConfirm = async (): Promise<void> => {
+  const handleDeleteConfirm = async () => {
     if (deletingId === null) return;
     try {
       await deleteMealById(deletingId);
-      setMealList((prev) => prev.filter((item) => item.applyId !== deletingId));
+      setMealList(prev => prev.filter(item => item.applyId !== deletingId));
       showToast("삭제되었습니다.", "success");
     } catch {
-      showToast("삭제에 실패했습니다.", "error");
+      showToast("삭제 실패했습니다.", "error");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleApplyClick = (): void => {
-    const now = new Date();
-    const todayString = toDateParam(now);
-    const currentMeal = getDefaultMealType();
-
-    navigate(`/apply/reason?meal=${currentMeal}&date=${todayString}`);
-  };
-
   return (
     <Body>
-      {toast !== null && (
-        <ToastMessage type={toast.type}>{toast.text}</ToastMessage>
-      )}
-
+      {toast && <ToastMessage type={toast.type}>{toast.text}</ToastMessage>}
       {deletingId !== null && (
         <ModalOverlay>
           <ModalBox>
@@ -215,33 +146,22 @@ const HomePage = () => {
 
       <TotalContainer>
         <Header title="메인페이지" />
-
         <ControlRow>
           <YearNavigator>
-            <img src={ArrowLeft as string} alt="이전 날짜" onClick={() => handleDateChange(-1)} />
+            <img src={ArrowLeft} alt="prev" onClick={() => handleDateChange(-1)} />
             <Years>{formatDate(currentDate)}</Years>
-            <img src={ArrowRight as string} alt="이후 날짜" onClick={() => handleDateChange(1)} />
+            <img src={ArrowRight} alt="next" onClick={() => handleDateChange(1)} />
           </YearNavigator>
-
+          
           <MealToggleGroup>
-            <MealToggleButton
-              active={mealType === "LUNCH"}
-              onClick={() => handleMealTypeChange("LUNCH")}
-            >
-              중식
-            </MealToggleButton>
-            <MealToggleButton
-              active={mealType === "DINNER"}
-              onClick={() => handleMealTypeChange("DINNER")}
-            >
-              석식
-            </MealToggleButton>
+            <MealToggleButton active={mealType === "LUNCH"} onClick={() => handleMealTypeChange("LUNCH")}>중식</MealToggleButton>
+            <MealToggleButton active={mealType === "DINNER"} onClick={() => handleMealTypeChange("DINNER")}>석식</MealToggleButton>
           </MealToggleGroup>
-
-          <LoginButton onClick={() => navigate("/login")}>
-            <img src={user as string} alt="유저 아이콘" />
-            Login
-          </LoginButton>
+          {!isLoggedIn && (
+            <LoginButton onClick={() => navigate("/login")}>
+              <img src={user} alt="user" /> Login
+            </LoginButton>
+          )}
         </ControlRow>
 
         <TableWrapper>
@@ -256,30 +176,33 @@ const HomePage = () => {
                 <Th></Th>
               </Tr>
             </Thead>
-
             <Tbody>
-              {!isLoading && mealList.length === 0 && (
+              {!isLoggedIn ? (
+                <Tr><EmptyTd colSpan={6}>로그인 후 이용 가능합니다.</EmptyTd></Tr>
+              ) : isLoading ? (
+                <Tr><EmptyTd colSpan={6}>로딩 중...</EmptyTd></Tr>
+              ) : mealList.length === 0 ? (
                 <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
+              ) : (
+                mealList.map((item) => (
+                  <Tr key={item.applyId}>
+                    <Td>{item.teacherName}</Td>
+                    <Td>{item.reason}</Td>
+                    <Td>{item.department}</Td>
+                    <Td>{item.position}</Td>
+                    <Td>{formatDateTime(item.createdAt)}</Td>
+                    <Td>
+                      <DeleteButton onClick={() => setDeletingId(item.applyId)}>삭제</DeleteButton>
+                    </Td>
+                  </Tr>
+                ))
               )}
-
-              {!isLoading && mealList.map((item: MealItem) => (
-                <Tr key={item.applyId}>
-                  <Td>{item.teacherName}</Td>
-                  <Td>{item.reason}</Td>
-                  <Td>{item.department}</Td>
-                  <Td>{item.position}</Td>
-                  <Td>{formatDateTime(item.createdAt)}</Td>
-                  <Td>
-                    <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
-                  </Td>
-                </Tr>
-              ))}
             </Tbody>
           </Table>
         </TableWrapper>
 
         <ButtonBox>
-          <ApplyButton onClick={handleApplyClick}>신청하기</ApplyButton>
+          <ApplyButton onClick={() => navigate(`/apply/reason?meal=${mealType}&date=${currentDateString}`)}>신청하기</ApplyButton>
         </ButtonBox>
       </TotalContainer>
       <Footer />
@@ -287,13 +210,7 @@ const HomePage = () => {
   );
 };
 
-interface MealToggleButtonProps {
-  active: boolean;
-}
-interface ToastMessageProps {
-  type: ToastType;
-}
-
+// 스타일 컴포넌트
 const Body = styled.div`
   width: 100vw;
   height: 100vh;
@@ -316,7 +233,7 @@ const YearNavigator = styled.div`
   display: flex;
   align-items: center;
   gap: 22px;
-
+  
   img {
     width: 8px;
     cursor: pointer;
@@ -335,7 +252,7 @@ const MealToggleGroup = styled.div`
   overflow: hidden;
 `;
 
-const MealToggleButton = styled.button<MealToggleButtonProps>`
+const MealToggleButton = styled.button<{ active: boolean }>`
   padding: 8px 16px;
   font-size: 20px;
   border: none;
@@ -359,10 +276,9 @@ const LoginButton = styled.button`
 
 const TableWrapper = styled.div`
   margin-top: 21px;
-  max-height: 370px;
   height: 370px;
   overflow-y: auto;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 `;
 
 const Table = styled.table`
@@ -388,27 +304,26 @@ const Tbody = styled.tbody`
 const Tr = styled.tr``;
 
 const Th = styled.th`
-  background-color: #444f61;
-  border-bottom: 2px solid #ccc;
   padding: 12px;
   font-size: 24px;
   position: sticky;
   top: 0;
   z-index: 10;
+  background-color: #444f61;
 `;
 
 const Td = styled.td`
-  border-right: 1px solid #e0e0e0;
   padding: 12px;
   font-size: 24px;
   text-align: center;
+  border-right: 1px solid #e0e0e0;
 `;
 
 const EmptyTd = styled.td`
   padding: 40px;
-  font-size: 18px;
   text-align: center;
   color: #888;
+  font-size: 20px;
 `;
 
 const DeleteButton = styled.button`
@@ -437,7 +352,7 @@ const ApplyButton = styled.button`
   cursor: pointer;
 `;
 
-const ToastMessage = styled.div<ToastMessageProps>`
+const ToastMessage = styled.div<{ type: string }>`
   position: fixed;
   top: 24px;
   left: 50%;
@@ -445,17 +360,14 @@ const ToastMessage = styled.div<ToastMessageProps>`
   z-index: 9999;
   padding: 16px 28px;
   border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
   color: white;
   background-color: ${({ type }) => (type === "success" ? "#27ae60" : "#e74c3c")};
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 `;
 
 const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0,0,0,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -467,13 +379,11 @@ const ModalBox = styled.div`
   border-radius: 12px;
   padding: 36px 48px;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 `;
 
 const ModalMessage = styled.p`
   font-size: 22px;
-  color: #222;
-  margin: 0 0 28px;
+  margin-bottom: 28px;
 `;
 
 const ModalButtons = styled.div`
@@ -483,22 +393,18 @@ const ModalButtons = styled.div`
 `;
 
 const CancelButton = styled.button`
-  padding: 12px 36px;
-  font-size: 18px;
+  padding: 10px 30px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  background: white;
-  color: #444;
   cursor: pointer;
 `;
 
 const ConfirmDeleteButton = styled.button`
-  padding: 12px 36px;
-  font-size: 18px;
-  border: none;
-  border-radius: 8px;
+  padding: 10px 30px;
   background: #444f61;
   color: white;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
 `;
 

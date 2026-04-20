@@ -12,12 +12,36 @@ export interface Applicant {
 }
 
 // 신청자 전체 조회
-export const getApplyList = async (meal?: string): Promise<Applicant[]> => {
-  const res = await instance.get("/admin/apply", {
-    params: meal ? { meal } : {},
-  });
-  const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
-  return list;
+export const getApplyList = async (
+  meal?: string,
+  date?: string,
+): Promise<Applicant[]> => {
+  try {
+    const res = await instance.get("/admin/apply", {
+      params: {
+        meal,
+        date,
+      },
+    });
+    const list = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+    return list;
+  } catch (err: unknown) {
+    const axiosErr = err as {
+      response?: { status?: number; data?: { message?: string } };
+    };
+    const status = axiosErr?.response?.status;
+
+    if (
+      status === 400 &&
+      axiosErr.response?.data?.message === "신청자가 없습니다."
+    ) {
+      return [];
+    }
+
+    throw new Error(
+      `[${status ?? "unknown"}] ${axiosErr.response?.data?.message ?? "알 수 없는 오류"}`,
+    );
+  }
 };
 
 // 월별 엑셀 출력
