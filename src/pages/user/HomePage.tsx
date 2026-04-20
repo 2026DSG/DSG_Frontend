@@ -69,7 +69,6 @@ const HomePage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
-    // 로그인 토큰 확인
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
 
@@ -78,13 +77,11 @@ const HomePage = () => {
       try {
         const types: MealType[] = mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
         
-        // 두 가지 유형(초과/개인)을 병렬로 조회
         const [res1, res2] = await Promise.all([
           getMealList(currentDateString, types[0]),
           getMealList(currentDateString, types[1]),
         ]);
 
-        // 최신 신청 순(createdAt 내림차순)으로 정렬
         const combined = [...res1, ...res2].sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
@@ -97,11 +94,10 @@ const HomePage = () => {
       }
     };
 
-    // 토큰이 존재할 때만 데이터를 요청
     if (token) {
       loadData();
     } else {
-      setMealList([]); // 비로그인 시 데이터 초기화
+      setMealList([]);
     }
   }, [currentDateString, mealType]);
 
@@ -156,6 +152,7 @@ const HomePage = () => {
             <Years>{formatDate(currentDate)}</Years>
             <img src={ArrowRight} alt="next" onClick={() => handleDateChange(1)} />
           </YearNavigator>
+          
           <MealToggleGroup>
             <MealToggleButton active={mealType === "LUNCH"} onClick={() => handleMealTypeChange("LUNCH")}>중식</MealToggleButton>
             <MealToggleButton active={mealType === "DINNER"} onClick={() => handleMealTypeChange("DINNER")}>석식</MealToggleButton>
