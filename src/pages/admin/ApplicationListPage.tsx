@@ -35,11 +35,20 @@ const ApplicationListPage = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
     const date = selectedDate.toLocaleDateString("sv-SE");
 
     getApplyList(undefined, date)
-      .then(setAllApplicantList)
-      .catch(() => alert("신청자 목록 조회에 실패했습니다."));
+      .then((list) => {
+        if (!cancelled) setAllApplicantList(list);
+      })
+      .catch(() => {
+        if (!cancelled) alert("신청자 목록 조회에 실패했습니다.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedDate]);
 
   const applicantList = allApplicantList;

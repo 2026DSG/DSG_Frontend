@@ -81,17 +81,18 @@ export const downloadTeacherExcel = async () => {
 
     if (status === 404 && blob) {
       const text = await blob.text();
+      let data: { message?: string } = {
+        message: "교직원 정보가 비어있습니다.",
+      };
       try {
         const json = JSON.parse(text);
-        throw { response: { status, data: json } };
+        if (json && typeof json === "object") {
+          data = json;
+        }
       } catch {
-        throw {
-          response: {
-            status,
-            data: { message: "교직원 정보가 비어있습니다." },
-          },
-        };
+        // keep default message
       }
+      throw { response: { status, data } };
     }
 
     throw err;

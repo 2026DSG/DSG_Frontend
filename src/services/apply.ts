@@ -31,11 +31,16 @@ export const getApplyList = async (
     };
     const status = axiosErr?.response?.status;
 
-    if (status === 400) {
+    if (
+      status === 400 &&
+      axiosErr.response?.data?.message === "신청자가 없습니다."
+    ) {
       return [];
     }
 
-    throw new Error(`[${status}] 알 수 없는 오류`);
+    throw new Error(
+      `[${status ?? "unknown"}] ${axiosErr.response?.data?.message ?? "알 수 없는 오류"}`,
+    );
   }
 };
 
