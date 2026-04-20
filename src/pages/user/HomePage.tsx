@@ -69,20 +69,19 @@ const HomePage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("accessToken"));
+    const token = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
 
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
         const types: MealType[] = mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
         
-        // 두 가지 유형(초과/개인)을 병렬로 조회
         const [res1, res2] = await Promise.all([
           getMealList(currentDateString, types[0]),
           getMealList(currentDateString, types[1]),
         ]);
 
-        // 최신 신청 순(createdAt 내림차순)으로 정렬
         const combined = [...res1, ...res2].sort((a, b) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
@@ -95,7 +94,11 @@ const HomePage = () => {
       }
     };
 
-    loadData();
+    if (token) {
+      loadData();
+    } else {
+      setMealList([]);
+    }
   }, [currentDateString, mealType]);
 
   const showToast = (text: string, type: ToastType) => {
@@ -149,6 +152,7 @@ const HomePage = () => {
             <Years>{formatDate(currentDate)}</Years>
             <img src={ArrowRight} alt="next" onClick={() => handleDateChange(1)} />
           </YearNavigator>
+          
           <MealToggleGroup>
             <MealToggleButton active={mealType === "LUNCH"} onClick={() => handleMealTypeChange("LUNCH")}>중식</MealToggleButton>
             <MealToggleButton active={mealType === "DINNER"} onClick={() => handleMealTypeChange("DINNER")}>석식</MealToggleButton>
@@ -173,7 +177,9 @@ const HomePage = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {isLoading ? (
+              {!isLoggedIn ? (
+                <Tr><EmptyTd colSpan={6}>로그인 후 이용 가능합니다.</EmptyTd></Tr>
+              ) : isLoading ? (
                 <Tr><EmptyTd colSpan={6}>로딩 중...</EmptyTd></Tr>
               ) : mealList.length === 0 ? (
                 <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
