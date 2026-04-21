@@ -3,101 +3,113 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import type { MealType } from "../../services/mealService";
 
+type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
 type BaseMealType = "LUNCH" | "DINNER";
+
+const getDefaultMealType = (): BaseMealType => {
+  const now = new Date();
+  const totalMinute = now.getHours() * 60 + now.getMinutes();
+  
+  // 06:40 ~ 13:30 사이일 때만 중식
+  if (totalMinute >= 6 * 60 + 40 && totalMinute < 13 * 60 + 30) {
+    return "LUNCH";
+  }
+  return "DINNER";
+};
 
 const ApplicationReasonPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const dateParam = searchParams.get("date") || new Date().toISOString().slice(0, 10);
-  const initialMeal = (searchParams.get("meal") as BaseMealType) || "LUNCH";
+  const dateParam = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
 
-  const [mealType, setMealType] = useState<BaseMealType>(initialMeal);
-  const [isSelfPay, setIsSelfPay] = useState<boolean>(false);
-  const [reason, setReason] = useState<string>("");
-  const [currentTime, setCurrentTime] = useState<string>("");
+  const [currentTime, setCurrentTime] = useState<string>('');
+  
+  // 메인페이지에서 넘겨준 파라미터가 최우선, 없으면 자체 계산
+  const [mealType, setMealType] = useState<BaseMealType>(
+    (searchParams.get("meal") as BaseMealType) ?? getDefaultMealType()
+  );
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setCurrentTime(now.toLocaleTimeString("ko-KR", { hour12: false, hour: '2-digit', minute: '2-digit' }));
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
     };
     updateTime();
-    const timer = setInterval(updateTime, 60000);
-    return () => clearInterval(timer);
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleNext = () => {
-    if (!reason.trim()) {
-      alert("신청 사유를 입력하거나 선택해주세요.");
-      return;
+  // reason 선택 시 meal enum 완성해서 전달
+  const handleReasonSelect = (isSelf: boolean) => {
+    let finalMeal: MealType;
+
+    if (mealType === "LUNCH") {
+      finalMeal = isSelf ? "LUNCH_SELF" : "LUNCH";
+    } else {
+      finalMeal = isSelf ? "DINNER_SELF" : "DINNER";
     }
-    
-    // 최종 MealType 결정
-    let finalType: MealType = mealType;
-    if (mealType === "LUNCH") finalType = isSelfPay ? "LUNCH_SELF" : "LUNCH";
-    else finalType = isSelfPay ? "DINNER_SELF" : "DINNER";
 
-    navigate(`/apply/teacher?meal=${finalType}&date=${dateParam}&reason=${encodeURIComponent(reason)}`);
+    // 리액트 라우터 화면 주소인 /apply/teacher 로 올바르게 이동합니다.
+    navigate(`/apply/teacher?meal=${finalMeal}&date=${dateParam}`);
   };
-
-  const reasons = ["단순 업무", "회의", "학생 상담", "기타 활동"];
 
   return (
     <Body>
       <TotalContainer>
-        <Header title="급식 신청" />
+        <Header title="유형 선택" showBack />
+
         <ContentWrapper>
           <TopRow>
             <TimeDisplay>{currentTime}</TimeDisplay>
-            <MealTypeText>{mealType === "LUNCH" ? "중식" : "석식"} 신청</MealTypeText>
+
+            <MealTypeText>
+              {mealType === "LUNCH" ? "중식" : "석식"}
+            </MealTypeText>
+
             <MealToggleGroup>
-              <MealToggleButton active={mealType === "LUNCH"} onClick={() => setMealType("LUNCH")}>중식</MealToggleButton>
-              <MealToggleButton active={mealType === "DINNER"} onClick={() => setMealType("DINNER")}>석식</MealToggleButton>
+              {(["LUNCH", "DINNER"] as BaseMealType[]).map((meal) => (
+                <MealToggleButton
+                  key={meal}
+                  active={mealType === meal}
+                  onClick={() => setMealType(meal)}
+                >
+                  {meal === "LUNCH" ? "중식" : "석식"}
+                </MealToggleButton>
+              ))}
             </MealToggleGroup>
           </TopRow>
 
-          <InputSection>
-            <Label>결제 방식</Label>
-            <SelectGroup>
-              <SelectButton active={!isSelfPay} onClick={() => setIsSelfPay(false)}>초과근무</SelectButton>
-              <SelectButton active={isSelfPay} onClick={() => setIsSelfPay(true)}>개인부담</SelectButton>
-            </SelectGroup>
+          <ButtonContainer>
+            <ReasonButton onClick={() => handleReasonSelect(false)}>
+              초과근무
+            </ReasonButton>
 
-            <Label style={{ marginTop: '40px' }}>신청 사유</Label>
-            <ReasonGrid>
-              {reasons.map(r => (
-                <ReasonChip key={r} selected={reason === r} onClick={() => setReason(r)}>{r}</ReasonChip>
-              ))}
-            </ReasonGrid>
-            <CustomInput 
-              placeholder="직접 입력..." 
-              value={reason} 
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </InputSection>
-
-          <NextButton onClick={handleNext}>다음으로</NextButton>
+            <ReasonButton onClick={() => handleReasonSelect(true)}>
+              개인부담
+            </ReasonButton>
+          </ButtonContainer>
         </ContentWrapper>
       </TotalContainer>
+
       <Footer />
     </Body>
   );
 };
 
-// 스타일 컴포넌트
 const Body = styled.div`
   width: 100vw;
   height: 100vh;
-  background-color: #fff;
+  background-color: #ffffff;
 `;
 
 const TotalContainer = styled.div`
   display: flex;
   flex-direction: column;
-  margin: 0 120px;
+  margin: 0px 120px;
 `;
 
 const ContentWrapper = styled.div`
@@ -112,16 +124,18 @@ const TopRow = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 60px;
+  margin-bottom: 80px;
 `;
 
 const TimeDisplay = styled.div`
   font-size: 24px;
-  font-weight: bold;
+  color: #333;
 `;
 
 const MealTypeText = styled.h1`
   font-size: 48px;
+  font-weight: bold;
+  color: #333;
   margin: 0;
 `;
 
@@ -133,72 +147,27 @@ const MealToggleGroup = styled.div`
 `;
 
 const MealToggleButton = styled.button<{ active: boolean }>`
-  padding: 10px 20px;
+  padding: 8px 16px;
+  font-size: 20px;
   border: none;
   cursor: pointer;
-  background: ${props => props.active ? "#444f61" : "#fff"};
-  color: ${props => props.active ? "#fff" : "#444f61"};
+  background-color: ${({ active }) => (active ? "#444f61" : "white")};
+  color: ${({ active }) => (active ? "white" : "#444f61")};
 `;
 
-const InputSection = styled.div`
-  width: 100%;
-  max-width: 600px;
-`;
-
-const Label = styled.div`
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 16px;
-`;
-
-const SelectGroup = styled.div`
+const ButtonContainer = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 100px;
+  margin-bottom: 100px;
 `;
 
-const SelectButton = styled.button<{ active: boolean }>`
-  flex: 1;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  cursor: pointer;
-  background: ${props => props.active ? "#444f61" : "#fff"};
-  color: ${props => props.active ? "#fff" : "#444f61"};
-  font-size: 18px;
-`;
-
-const ReasonGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-`;
-
-const ReasonChip = styled.div<{ selected: boolean }>`
-  padding: 15px;
-  text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  cursor: pointer;
-  background: ${props => props.selected ? "#eef0f4" : "#fff"};
-  font-size: 18px;
-`;
-
-const CustomInput = styled.input`
-  width: 100%;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 18px;
-  box-sizing: border-box;
-`;
-
-const NextButton = styled.button`
-  margin-top: 60px;
-  padding: 20px 100px;
-  font-size: 28px;
-  background: #444f61;
-  color: white;
+const ReasonButton = styled.button`
+  width: 400px;
+  height: 270px;
+  font-size: 48px;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #444f61;
   border: none;
   border-radius: 12px;
   cursor: pointer;
