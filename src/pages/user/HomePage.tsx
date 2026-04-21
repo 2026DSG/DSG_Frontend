@@ -10,10 +10,10 @@ import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
 
 import { getMealList, deleteMealById } from "../../services/mealService";
-// 변경: BaseMealItem 대신 완전한 MealItem을 직접 가져옵니다.
 import type { MealType, MealItem } from "../../services/mealService";
 
 type BaseMealType = "LUNCH" | "DINNER";
+
 
 type ToastType = "success" | "error";
 interface Toast {
@@ -44,7 +44,6 @@ const formatDateTime = (dateString?: string): string => {
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   
-  // HTML에서 연속된 공백이 무시되지 않도록 유니코드 공백(\u00A0)을 여러 개 사용했습니다.
   return `${year}-${month}-${day}\u00A0\u00A0\u00A0\u00A0\u00A0${hours}:${minutes}`;
 };
 
@@ -72,21 +71,17 @@ const HomePage = () => {
   const mealType = mealQuery || getDefaultMealType();
   const currentDateString = toDateParam(currentDate);
 
-  // 실전용에서는 초기값을 빈 배열로 둡니다.
   const [mealList, setMealList] = useState<MealItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
 
-  // 로그인 상태 관리 (로컬스토리지의 토큰 존재 여부 확인)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
-    // 페이지 로드 시 토큰 확인 (키 이름은 프로젝트 환경에 맞춰 "accessToken" 등으로 수정하세요)
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
 
-    // 🚨수정된 부분: 비로그인(토큰 없음) 상태일 경우 API 호출을 방지하고 빈 화면으로 유지합니다.
     if (!token) {
       setMealList([]);
       return;
@@ -103,7 +98,6 @@ const HomePage = () => {
           getMealList(currentDateString, typesToFetch[1]),
         ]);
 
-        // 변경: API 응답에 createdAt이 포함되었으므로 해당 값으로 최신순 정렬
         const combined = [...normalData, ...selfData].sort((a: MealItem, b: MealItem) => {
           const dateA = new Date(a.createdAt).getTime();
           const dateB = new Date(b.createdAt).getTime();
@@ -158,12 +152,8 @@ const HomePage = () => {
   };
 
   const handleApplyClick = (): void => {
-    // 🚨수정된 부분: 화면에 보이는 날짜/타입을 무시하고, '실제 현재 시간'을 가져와 신청 페이지로 보냅니다.
-    const now = new Date();
-    const todayString = toDateParam(now);
     const currentMeal = getDefaultMealType();
-
-    navigate(`/apply/reason?meal=${currentMeal}&date=${todayString}`);
+    navigate(`/apply/reason?meal=${currentMeal}&date=${currentDateString}`);
   };
 
   return (
