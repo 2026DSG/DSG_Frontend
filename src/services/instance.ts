@@ -67,7 +67,9 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 // 로그아웃 이벤트
 const dispatchLogout = () => {
-  window.location.href = "/login";
+  if (window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
 };
 
 // axios 인스턴스 생성
