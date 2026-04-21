@@ -66,10 +66,8 @@ const processQueue = (error: unknown, token: string | null = null) => {
 };
 
 // 로그아웃 이벤트
-export const AUTH_LOGOUT_EVENT = "main:logout";
-
 const dispatchLogout = () => {
-  window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
+  window.location.href = "/login";
 };
 
 // axios 인스턴스 생성
@@ -145,8 +143,10 @@ instance.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // 401 아니거나 이미 재시도한 요청이면 그대로 reject
-    if (error.response?.status !== 401 || originalRequest?._retry) {
+    if (
+      (error.response?.status !== 401 && error.response?.status !== 403) ||
+      originalRequest?._retry
+    ) {
       return Promise.reject(error);
     }
 
