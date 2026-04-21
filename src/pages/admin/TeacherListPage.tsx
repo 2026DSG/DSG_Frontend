@@ -19,10 +19,9 @@ const PositionLabel: Record<string, string> = {
   industrial: "산학견임",
 };
 
-const currentYear = new Date().getFullYear();
-
 const TeacherListPage = () => {
   const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
   const [teacherList, setTeacherList] = useState<Teacher[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,7 +33,7 @@ const TeacherListPage = () => {
       console.error(err);
       alert("교직원 목록 조회에 실패했습니다.");
     }
-  }, []);
+  }, [currentYear]);
 
   useEffect(() => {
     fetchTeacherList();
