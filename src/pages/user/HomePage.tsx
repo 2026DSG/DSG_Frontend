@@ -86,6 +86,12 @@ const HomePage = () => {
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
 
+    // 🚨수정된 부분: 비로그인(토큰 없음) 상태일 경우 API 호출을 방지하고 빈 화면으로 유지합니다.
+    if (!token) {
+      setMealList([]);
+      return;
+    }
+
     const loadData = async (): Promise<void> => {
       setIsLoading(true);
       try {
@@ -152,6 +158,7 @@ const HomePage = () => {
   };
 
   const handleApplyClick = (): void => {
+    // 🚨수정된 부분: 화면에 보이는 날짜/타입을 무시하고, '실제 현재 시간'을 가져와 신청 페이지로 보냅니다.
     const now = new Date();
     const todayString = toDateParam(now);
     const currentMeal = getDefaultMealType();
