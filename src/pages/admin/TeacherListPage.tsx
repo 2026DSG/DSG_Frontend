@@ -1,7 +1,6 @@
 import styled from "@emotion/styled";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -20,23 +19,22 @@ const PositionLabel: Record<string, string> = {
   industrial: "산학견임",
 };
 
+const currentYear = new Date().getFullYear();
+
 const TeacherListPage = () => {
   const navigate = useNavigate();
   const [teacherList, setTeacherList] = useState<Teacher[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const formatDate = (date: Date) => `${date.getFullYear()}`;
 
   const fetchTeacherList = useCallback(async () => {
     try {
-      const res = await getYearsFilter(selectedDate.getFullYear());
+      const res = await getYearsFilter(currentYear);
       setTeacherList(res);
     } catch (err) {
       console.error(err);
       alert("교직원 목록 조회에 실패했습니다.");
     }
-  }, [selectedDate]);
+  }, []);
 
   useEffect(() => {
     fetchTeacherList();
@@ -111,31 +109,13 @@ const TeacherListPage = () => {
     }
   };
 
-  const goToPrevYear = () => {
-    setSelectedDate((prev) => {
-      const d = new Date(prev);
-      d.setFullYear(d.getFullYear() - 1);
-      return d;
-    });
-  };
-
-  const goToNextYear = () => {
-    setSelectedDate((prev) => {
-      const d = new Date(prev);
-      d.setFullYear(d.getFullYear() + 1);
-      return d;
-    });
-  };
-
   return (
     <Body>
       <TotalContainer>
         <Header title="메인페이지" />
         <UpsideBox>
           <YearNavigator>
-            <img src={ArrowLeft} onClick={goToPrevYear} alt="이전 연도" />
-            <Years>{formatDate(selectedDate)}</Years>
-            <img src={ArrowRight} onClick={goToNextYear} alt="이후 연도" />
+            <Years>{currentYear}</Years>
           </YearNavigator>
 
           <ApplicantListButton onClick={() => navigate("/admin/apply")}>
@@ -236,6 +216,7 @@ const YearNavigator = styled.div`
 `;
 
 const Years = styled.span`
+  margin-left: 10px;
   font-size: 24px;
   padding-bottom: 6px;
 `;
