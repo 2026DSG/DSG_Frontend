@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { isAxiosError } from "axios"; // 🚨수정된 부분: axios 타입 가드를 위한 임포트
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SearchIcon from "../../assets/Search.svg";
@@ -47,9 +48,11 @@ const ApplicationTeacherPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // URL 파라미터에서 현재 날짜와 선택된 급식 유형을 가져옵니다.
-  // 메인 페이지의 조회 조건(date, meal)이 이 페이지까지 유지됩니다.
-  const mealParam = (searchParams.get("meal") ?? "DINNER") as MealType;
+  // 🚨수정된 부분: URL 파라미터를 화이트리스트로 검증하고, 잘못된 값이면 DINNER로 폴백(Fallback) 처리합니다.
+  const rawMeal = searchParams.get("meal");
+  const isValidMeal = rawMeal === "LUNCH" || rawMeal === "LUNCH_SELF" || rawMeal === "DINNER" || rawMeal === "DINNER_SELF";
+  const mealParam: MealType = isValidMeal ? (rawMeal as MealType) : "DINNER";
+  
   const dateParam = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -107,17 +110,24 @@ const ApplicationTeacherPage = () => {
       const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
       navigate(`/?date=${dateParam}&meal=${baseMeal}`);
     } catch (err: any) {
-      const status = err.response?.status;
-      const message = err.response?.data?.message;
+      // 🚨수정된 부분: isAxiosError 타입 가드를 사용하여 안전하게 에러를 처리합니다.
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        const message = err.response?.data?.message;
 
-      if (status === 400) {
-        alert(message || "입력 정보가 올바르지 않습니다.");
-      } else if (status === 404) {
-        alert("존재하지 않는 교직원입니다.");
-      } else if (status === 409) {
-        alert("해당 날짜에 이미 신청 내역이 존재합니다.");
+        if (status === 400) {
+          alert(message || "입력 정보가 올바르지 않습니다.");
+        } else if (status === 404) {
+          alert("존재하지 않는 교직원입니다.");
+        } else if (status === 409) {
+          alert("해당 날짜에 이미 신청 내역이 존재합니다.");
+        } else {
+          alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
       } else {
-        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        // Axios 에러가 아닌 기타 예외(TypeError 등) 처리
+        alert("알 수 없는 오류가 발생했습니다. (클라이언트 오류)");
+        console.error(err);
       }
       setIsSubmitting(false);
     }
