@@ -22,6 +22,12 @@ const mealLabel: Record<string, string> = {
   DINNER_SELF: "석식",
 };
 
+const PositionLabel: Record<string, string> = {
+  teacher: "교원",
+  general: "일반직",
+  industrial: "산학견임",
+};
+
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -38,7 +44,7 @@ const ApplicationListPage = () => {
     let cancelled = false;
     const date = selectedDate.toLocaleDateString("sv-SE");
 
-    getApplyList(undefined, date)
+    getApplyList(date)
       .then((list) => {
         if (!cancelled) setAllApplicantList(list);
       })
@@ -108,7 +114,9 @@ const ApplicationListPage = () => {
                     <Td>{mealLabel[applicant.meal] ?? applicant.meal}</Td>
                     <Td>{applicant.teacherName}</Td>
                     <Td>{applicant.department}</Td>
-                    <Td>{applicant.position}</Td>
+                    <Td>
+                      {PositionLabel[applicant.position] ?? applicant.position}
+                    </Td>
                     <Td>{applicant.reason}</Td>
                   </Tr>
                 ))
