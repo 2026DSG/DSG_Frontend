@@ -23,7 +23,7 @@ export const getMealList = async (
   date: string,
   meal: MealType
 ): Promise<MealItem[]> => {
-  const res = await instance.get("/apply", {
+  const res = await instance.get("/main/apply", {
     params: { meal, date },
   });
 
