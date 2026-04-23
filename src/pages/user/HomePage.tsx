@@ -14,12 +14,18 @@ import type { MealType, MealItem } from "../../services/mealService";
 
 type BaseMealType = "LUNCH" | "DINNER";
 
-
 type ToastType = "success" | "error";
 interface Toast {
   text: string;
   type: ToastType;
 }
+
+// 🚨추가된 부분: 직위 영문 응답 데이터를 한글 라벨로 변환하기 위한 매핑 객체
+const POSITION_LABEL: Record<string, string> = {
+  teacher: "교원",
+  general: "일반직",
+  industrial: "산학겸임",
+};
 
 const formatDate = (date: Date): string => {
   const year = date.getFullYear();
@@ -231,7 +237,8 @@ const HomePage = () => {
                   <Td>{item.teacherName}</Td>
                   <Td>{item.reason}</Td>
                   <Td>{item.department}</Td>
-                  <Td>{item.position}</Td>
+                  {/* 🚨수정된 부분: 매핑 객체를 활용하여 직위명 한글 변환 적용 */}
+                  <Td>{POSITION_LABEL[item.position] || item.position}</Td>
                   <Td>{formatDateTime(item.createdAt)}</Td>
                   <Td>
                     <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
