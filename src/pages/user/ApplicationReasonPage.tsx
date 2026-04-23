@@ -26,8 +26,6 @@ const ApplicationReasonPage = () => {
 
   const [currentTime, setCurrentTime] = useState<string>('');
   
-  // 메인페이지에서 넘겨준 파라미터가 최우선, 없으면 자체 계산
-  // 🚨수정된 부분: URL 파라미터가 정확히 "LUNCH"나 "DINNER"인지 검증합니다.
   const [mealType, setMealType] = useState<BaseMealType>(() => {
     const mealParam = searchParams.get("meal");
     if (mealParam === "LUNCH" || mealParam === "DINNER") {

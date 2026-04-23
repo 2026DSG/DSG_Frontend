@@ -11,7 +11,6 @@ import type { Teacher } from "../../services/teacher";
 import { postMealApplication } from "../../services/mealService";
 import type { MealType } from "../../services/mealService";
 
-// 급식 유형별 라벨 및 사유 추출을 위한 매핑
 const MEAL_LABEL: Record<MealType, string> = {
   LUNCH: "초과근무 | 중식",
   LUNCH_SELF: "개인부담 | 중식",
@@ -168,7 +167,6 @@ const ApplicationTeacherPage = () => {
               </KeyboardContainer>
             </SearchSection>
 
-            {/* 오른쪽: 교직원 목록 테이블 세션 */}
             <TableSection>
               <TableWrapper>
                 <Table>
@@ -224,7 +222,6 @@ const ApplicationTeacherPage = () => {
   );
 };
 
-/* CSS 스타일 - 원본 디자인 100% 유지 */
 const Body = styled.div`
   width: 100vw;
   height: 100vh;

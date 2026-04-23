@@ -19,24 +19,16 @@ interface ApiResponse<T> {
   data: T;
 }
 
-/**
- * 급식 신청 목록 조회 (Main)
- * @param date 조회 날짜 (YYYY-MM-DD)
- * @param meal 급식 유형
- */
 export const getMealList = async (
   date: string,
   meal: MealType
 ): Promise<MealItem[]> => {
-  // 명세서의 GET /apply?meal=...&date=... 반영
-  // 기존 프로젝트 구조에 따라 /main/apply를 유지하거나 /apply로 수정 가능합니다.
   const res = await instance.get("/main/apply", {
     params: { meal, date },
   });
 
   const data = res.data;
 
-  // 서버 응답 구조에 따른 방어 코드
   if (Array.isArray(data)) {
     return data;
   }
@@ -47,9 +39,8 @@ export const getMealList = async (
   return [];
 };
 
-/**
- * 급식 신청 등록
- */
+
+//급식 신청 등록
 export const postMealApplication = async (body: {
   teacherId: number;
   meal: MealType;
@@ -59,9 +50,7 @@ export const postMealApplication = async (body: {
   await instance.post("/main/apply", body);
 };
 
-/**
- * 급식 신청 삭제
- */
+// 급식 신청 삭제
 export const deleteMealById = async (applyId: number): Promise<void> => {
   await instance.delete(`/main/apply/${applyId}`);
 };
