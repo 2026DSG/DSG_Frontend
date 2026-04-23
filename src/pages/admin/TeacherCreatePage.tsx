@@ -146,9 +146,9 @@ const TeacherCreatePage = () => {
                 <option value="" disabled>
                   직위를 선택해주세요
                 </option>
-                <option value="teacher">교원</option>
-                <option value="general">일반직</option>
-                <option value="industrial">산학겸임</option>
+                <option value="교원">교원</option>
+                <option value="일반직">일반직</option>
+                <option value="산학겸임">산학겸임</option>
               </FormSelect>
               {errors.position && (
                 <ErrorMessage>{errors.position}</ErrorMessage>
@@ -216,9 +216,13 @@ const FormInput = styled.input<{ hasError?: boolean }>`
 const FormSelect = styled.select<{ isEmpty: boolean; hasError?: boolean }>`
   border: 1px solid ${({ hasError }) => (hasError ? "#e53e3e" : "#c1c6d1")};
   border-radius: 6px;
-  padding: 18px 16px;
+  padding: 18px 48px 18px 16px;
   font-size: 20px;
   color: ${({ isEmpty }) => (isEmpty ? "#8e8c8c" : "#000")};
+  appearance: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat right 20px center;
+  background-color: white;
 `;
 
 const ErrorMessage = styled.span`
