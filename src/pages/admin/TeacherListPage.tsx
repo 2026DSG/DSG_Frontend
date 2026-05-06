@@ -13,12 +13,6 @@ import {
   getYearsFilter,
 } from "../../services/teacher";
 
-const PositionLabel: Record<string, string> = {
-  teacher: "교원",
-  general: "일반직",
-  industrial: "산학견임",
-};
-
 const TeacherListPage = () => {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
@@ -144,7 +138,7 @@ const TeacherListPage = () => {
                     <Td>{teacher.name}</Td>
                     <Td>{teacher.department}</Td>
                     <Td>
-                      {PositionLabel[teacher.position] ?? teacher.position}
+                      {teacher.position}
                     </Td>
                     <Td>
                       <button onClick={() => handleDelete(teacher.id)}>
