@@ -22,12 +22,6 @@ const mealLabel: Record<string, string> = {
   DINNER_SELF: "석식",
 };
 
-const PositionLabel: Record<string, string> = {
-  teacher: "교원",
-  general: "일반직",
-  industrial: "산학견임",
-};
-
 const is404 = (err: unknown): boolean =>
   typeof err === "object" &&
   err !== null &&
@@ -121,7 +115,7 @@ const ApplicationListPage = () => {
                     <Td>{applicant.teacherName}</Td>
                     <Td>{applicant.department}</Td>
                     <Td>
-                      {PositionLabel[applicant.position] ?? applicant.position}
+                      {applicant.position}
                     </Td>
                     <Td>{applicant.reason}</Td>
                   </Tr>
