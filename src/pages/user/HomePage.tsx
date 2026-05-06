@@ -20,7 +20,6 @@ interface Toast {
   type: ToastType;
 }
 
-// 🚨추가된 부분: 직위 영문 응답 데이터를 한글 라벨로 변환하기 위한 매핑 객체
 const POSITION_LABEL: Record<string, string> = {
   teacher: "교원",
   general: "일반직",
@@ -205,7 +204,6 @@ const HomePage = () => {
             </MealToggleButton>
           </MealToggleGroup>
 
-          {/* 로그인 하지 않았을 때만 로그인 버튼 표시 */}
           {!isLoggedIn && (
             <LoginButton onClick={() => navigate("/login")}>
               <img src={user as string} alt="유저 아이콘" />
@@ -227,25 +225,29 @@ const HomePage = () => {
               </Tr>
             </Thead>
 
-            <Tbody>
-              {!isLoading && mealList.length === 0 && (
-                <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
-              )}
-
-              {!isLoading && mealList.map((item: MealItem) => (
-                <Tr key={item.applyId}>
-                  <Td>{item.teacherName}</Td>
-                  <Td>{item.reason}</Td>
-                  <Td>{item.department}</Td>
-                  {/* 🚨수정된 부분: 매핑 객체를 활용하여 직위명 한글 변환 적용 */}
-                  <Td>{POSITION_LABEL[item.position] || item.position}</Td>
-                  <Td>{formatDateTime(item.createdAt)}</Td>
-                  <Td>
-                    <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
+           
+           <Tbody>
+             {!isLoggedIn && (
+               <Tr><EmptyTd colSpan={6}>로그인 해주세요.</EmptyTd></Tr>
+             )}
+           
+             {isLoggedIn && !isLoading && mealList.length === 0 && (
+               <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
+             )}
+           
+             {!isLoading && mealList.map((item: MealItem) => (
+               <Tr key={item.applyId}>
+                 <Td>{item.teacherName}</Td>
+                 <Td>{item.reason}</Td>
+                 <Td>{item.department}</Td>
+                 <Td>{POSITION_LABEL[item.position] || item.position}</Td>
+                 <Td>{formatDateTime(item.createdAt)}</Td>
+                 <Td>
+                   <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
+                 </Td>
+               </Tr>
+             ))}
+           </Tbody>
           </Table>
         </TableWrapper>
 
