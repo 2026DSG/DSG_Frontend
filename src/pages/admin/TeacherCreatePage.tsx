@@ -148,7 +148,7 @@ const TeacherCreatePage = () => {
                 </option>
                 <option value="교원">교원</option>
                 <option value="일반직">일반직</option>
-                <option value="산학겸임">산학겸임</option>
+                <option value="산학견임">산학견임</option>
               </FormSelect>
               {errors.position && (
                 <ErrorMessage>{errors.position}</ErrorMessage>
