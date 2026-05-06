@@ -28,6 +28,12 @@ const PositionLabel: Record<string, string> = {
   industrial: "산학견임",
 };
 
+const is404 = (err: unknown): boolean =>
+  typeof err === "object" &&
+  err !== null &&
+  "status" in err &&
+  (err as { status: number }).status === 404;
+
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -126,10 +132,41 @@ const ApplicationListPage = () => {
         </TableWrapper>
 
         <ButtonBox>
-          <OutputButton onClick={downloadMonthlyExcel}>
+          <OutputButton
+            onClick={async () => {
+              try {
+                await downloadMonthlyExcel(
+                  selectedDate.getFullYear(),
+                  selectedDate.getMonth() + 1,
+                );
+              } catch (err) {
+                alert(
+                  is404(err)
+                    ? "해당 월의 신청 데이터가 없습니다."
+                    : "엑셀 다운로드에 실패했습니다.",
+                );
+              }
+            }}
+          >
             신청자 월별 액셀 출력
           </OutputButton>
-          <OutputButton onClick={downloadSummaryExcel}>
+
+          <OutputButton
+            onClick={async () => {
+              try {
+                await downloadSummaryExcel(
+                  selectedDate.getFullYear(),
+                  selectedDate.getMonth() + 1,
+                );
+              } catch (err) {
+                alert(
+                  is404(err)
+                    ? "해당 월의 총괄 데이터가 없습니다."
+                    : "총괄표 다운로드에 실패했습니다.",
+                );
+              }
+            }}
+          >
             총괄표 출력
           </OutputButton>
         </ButtonBox>
