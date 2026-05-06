@@ -20,12 +20,6 @@ interface Toast {
   type: ToastType;
 }
 
-const POSITION_LABEL: Record<string, string> = {
-  teacher: "교원",
-  general: "일반직",
-  industrial: "산학겸임",
-};
-
 const formatDate = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -240,7 +234,7 @@ const HomePage = () => {
                  <Td>{item.teacherName}</Td>
                  <Td>{item.reason}</Td>
                  <Td>{item.department}</Td>
-                 <Td>{POSITION_LABEL[item.position] || item.position}</Td>
+                 <Td>{item.position}</Td>
                  <Td>{formatDateTime(item.createdAt)}</Td>
                  <Td>
                    <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
