@@ -5,7 +5,6 @@ import type {
   InternalAxiosRequestConfig,
 } from "axios";
 
-// 토큰 저장소
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 
@@ -33,7 +32,6 @@ const removeStoredRefreshToken = (): void => {
   }
 };
 
-// 항상 최신 refreshToken 보장
 const getRefreshToken = (): string | null => {
   const stored = getStoredRefreshToken();
 
@@ -44,7 +42,6 @@ const getRefreshToken = (): string | null => {
   return refreshToken;
 };
 
-// 동시 요청 처리
 let isRefreshing = false;
 
 let failedQueue: Array<{
@@ -65,14 +62,12 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-// 로그아웃 이벤트
 const dispatchLogout = () => {
   if (window.location.pathname !== "/login") {
     window.location.href = "/login";
   }
 };
 
-// axios 인스턴스 생성
 const baseConfig = {
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 5000,
@@ -81,22 +76,17 @@ const baseConfig = {
   },
 };
 
-// refresh 전용 인스턴스
 export const authApi = axios.create({
   ...baseConfig,
   timeout: 10000,
 });
 
-// 일반 API
 const instance: AxiosInstance = axios.create(baseConfig);
 
-// 토큰 관리
 export const setTokens = (newAccess: string, newRefresh: string) => {
-  console.log("setTokens 호출됨", newAccess);
   accessToken = newAccess;
   refreshToken = newRefresh;
 
-  // localStorage에 accessToken도 저장
   try {
     localStorage.setItem("accessToken", newAccess);
   } catch {
@@ -116,14 +106,11 @@ export const clearTokens = () => {
   removeStoredRefreshToken();
 };
 
-// 요청 인터셉터
 instance.interceptors.request.use(
   (config) => {
-    // 메모리가 아닌 localStorage에서 항상 최신값을 읽음
     const storedToken = localStorage.getItem("accessToken");
     const token = storedToken || accessToken;
 
-    console.log("요청 시 accessToken:", token);
     if (token) {
       config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
@@ -133,7 +120,6 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// 응답 인터셉터
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -152,7 +138,6 @@ instance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 이미 refresh 중이면 큐에 대기
     if (isRefreshing) {
       return new Promise<AxiosResponse>((resolve, reject) => {
         failedQueue.push({ resolve, reject, originalRequest });
