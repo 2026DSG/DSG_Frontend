@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import EyeClose from "../../assets/EyeClose.svg";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import EyeOpen from "../../assets/EyeOpen.svg";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/login";
@@ -13,6 +13,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState<string>("");
   const [touched, setTouched] = useState({ username: false, password: false });
   const navigate = useNavigate();
+
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   const errors = {
     username:
@@ -73,6 +75,13 @@ const LoginPage = () => {
                 onBlur={() =>
                   setTouched((prev) => ({ ...prev, username: true }))
                 }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setTouched((prev) => ({ ...prev, username: true }));
+                    passwordRef.current?.focus();
+                  }
+                }}
               />
               {touched.username && errors.username && (
                 <ErrorMessage>{errors.username}</ErrorMessage>
@@ -83,6 +92,7 @@ const LoginPage = () => {
 
               <PwdContainer>
                 <PwdInput
+                  ref={passwordRef}
                   type={showPassword ? "text" : "password"}
                   placeholder="비밀번호를 입력해주세요"
                   autoComplete="current-password"
