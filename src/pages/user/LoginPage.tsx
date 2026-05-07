@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import EyeClose from "../../assets/EyeClose.svg";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import EyeOpen from "../../assets/EyeOpen.svg";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/login";
@@ -11,12 +11,34 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [touched, setTouched] = useState({ username: false, password: false });
   const navigate = useNavigate();
 
-  const isValid = username.trim() !== "" && password.trim() !== "";
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  const errors = {
+    username:
+      username.trim() === ""
+        ? "이름은 필수입니다"
+        : username.trim().length < 3 || username.trim().length > 12
+          ? "이름은 3 ~ 12자 범위의 값을 요구합니다"
+          : "",
+    password:
+      password.trim() === ""
+        ? "비밀번호는 필수입니다"
+        : password.length < 8
+          ? "비밀번호는 최소 8자 이상의 값을 요구합니다"
+          : "",
+  };
+
+  const isValid = !errors.username && !errors.password;
 
   const handleLogin = async (e: React.MouseEvent | React.FormEvent) => {
     e.preventDefault();
+    setTouched({ username: true, password: true });
+
+    if (!isValid) return;
+
     try {
       await loginUser({ username, password });
 
@@ -50,18 +72,35 @@ const LoginPage = () => {
                 autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, username: true }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setTouched((prev) => ({ ...prev, username: true }));
+                    passwordRef.current?.focus();
+                  }
+                }}
               />
+              {touched.username && errors.username && (
+                <ErrorMessage>{errors.username}</ErrorMessage>
+              )}
             </InputBox>
             <InputBox>
               <span>비밀번호</span>
 
               <PwdContainer>
                 <PwdInput
+                  ref={passwordRef}
                   type={showPassword ? "text" : "password"}
                   placeholder="비밀번호를 입력해주세요"
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() =>
+                    setTouched((prev) => ({ ...prev, password: true }))
+                  }
                 />
                 <EyeButton
                   type="button"
@@ -70,6 +109,9 @@ const LoginPage = () => {
                   <img src={showPassword ? EyeOpen : EyeClose} alt="" />
                 </EyeButton>
               </PwdContainer>
+              {touched.password && errors.password && (
+                <ErrorMessage>{errors.password}</ErrorMessage>
+              )}
             </InputBox>
           </FormBox>
           <LoginButton disabled={!isValid} type="submit">
@@ -189,6 +231,11 @@ const PwdInput = styled.input`
   :focus {
     outline: none;
   }
+`;
+
+const ErrorMessage = styled.p`
+  font-size: 18px;
+  color: #e53935;
 `;
 
 export default LoginPage;
