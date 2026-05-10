@@ -1,4 +1,4 @@
-import instance from "./instance";
+import instance from "./axiosInstance";
 
 export interface Applicant {
   applyId: number;
