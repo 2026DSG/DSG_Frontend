@@ -1,4 +1,4 @@
-import instance from "./instance";
+import instance from "./axiosInstance";
 
 // 급식 유형 타입 정의
 export type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
@@ -21,7 +21,7 @@ interface ApiResponse<T> {
 
 export const getMealList = async (
   date: string,
-  meal: MealType
+  meal: MealType,
 ): Promise<MealItem[]> => {
   const res = await instance.get("/main/apply", {
     params: { meal, date },
@@ -38,7 +38,6 @@ export const getMealList = async (
 
   return [];
 };
-
 
 //급식 신청 등록
 export const postMealApplication = async (body: {

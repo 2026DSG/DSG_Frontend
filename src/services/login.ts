@@ -1,4 +1,4 @@
-import instance, { setTokens, clearTokens } from "./instance";
+import instance from "./axiosInstance";
 
 interface LoginPayload {
   username: string;
@@ -9,6 +9,17 @@ interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   role: string;
+}
+
+function setTokens(accessToken: string, refreshToken: string): void {
+  localStorage.setItem("accessToken", accessToken);
+  localStorage.setItem("refreshToken", refreshToken);
+}
+
+function clearTokens(): void {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("lastReissueTime");
 }
 
 export const loginUser = async (
