@@ -38,7 +38,15 @@ instance.interceptors.response.use(
           refreshPromise = null;
         });
       }
-      await refreshPromise;
+
+      try {
+        await refreshPromise;
+      } catch {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
 
       const newAccessToken = localStorage.getItem("accessToken");
       if (newAccessToken) {
