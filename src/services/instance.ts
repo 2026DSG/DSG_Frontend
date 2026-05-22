@@ -63,7 +63,15 @@ export async function reissueAccessToken(): Promise<void> {
     );
   } catch (err) {
     console.error("[토큰 재발급 실패] 알 수 없는 오류:", err);
-    localStorage.removeItem("refreshToken");
+
+    const isAuthError =
+      axios.isAxiosError(err) &&
+      (err.response?.status === 401 || err.response?.status === 403);
+
+    if (isAuthError) {
+      localStorage.removeItem("refreshToken");
+    }
+
     throw err;
   } finally {
     isReissuing = false;
