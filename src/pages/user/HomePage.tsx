@@ -130,7 +130,6 @@ const HomePage = () => {
   };
 
   const handleApplyClick = (): void => {
-    // 🚨수정된 부분: 메인 페이지에서 선택된 토글(mealType) 값이 다음 화면에도 그대로 넘어가도록 수정
     navigate(`/apply/reason?meal=${mealType}&date=${currentDateString}`);
   };
 
@@ -174,7 +173,6 @@ const HomePage = () => {
       )}
 
       <TotalContainer>
-        {/* 🚨수정된 부분: 페이지명을 "메인페이지"에서 "신청 목록"으로 변경 */}
         <Header title="신청 목록" />
 
         <ControlRow>
