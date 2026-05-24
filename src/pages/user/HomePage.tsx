@@ -129,6 +129,10 @@ const HomePage = () => {
     setSearchParams({ date: currentDateString, meal: newMeal });
   };
 
+  const handleApplyClick = (): void => {
+    navigate(`/apply/reason?meal=${mealType}&date=${currentDateString}`);
+  };
+
   const handleDeleteClick = (applyId: number): void => {
     if (!applyId) {
       showToast("유효하지 않은 항목입니다.", "error");
@@ -150,11 +154,6 @@ const HomePage = () => {
     }
   };
 
-  const handleApplyClick = (): void => {
-    const currentMeal = getDefaultMealType();
-    navigate(`/apply/reason?meal=${currentMeal}&date=${currentDateString}`);
-  };
-
   return (
     <Body>
       {toast !== null && (
@@ -174,7 +173,7 @@ const HomePage = () => {
       )}
 
       <TotalContainer>
-        <Header title="메인페이지" />
+        <Header title="신청 목록" />
 
         <ControlRow>
           <YearNavigator>

@@ -1,7 +1,6 @@
 import styled from "@emotion/styled";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { isAxiosError } from "axios"; // 🚨수정된 부분: axios 타입 가드를 위한 임포트
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SearchIcon from "../../assets/Search.svg";
@@ -47,7 +46,6 @@ const ApplicationTeacherPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // 🚨수정된 부분: URL 파라미터를 화이트리스트로 검증하고, 잘못된 값이면 DINNER로 폴백(Fallback) 처리합니다.
   const rawMeal = searchParams.get("meal");
   const isValidMeal = rawMeal === "LUNCH" || rawMeal === "LUNCH_SELF" || rawMeal === "DINNER" || rawMeal === "DINNER_SELF";
   const mealParam: MealType = isValidMeal ? (rawMeal as MealType) : "DINNER";
@@ -93,11 +91,9 @@ const ApplicationTeacherPage = () => {
     if (selectedId === null || isSubmitting) return;
     setIsSubmitting(true);
 
-    // 라벨에서 "초과근무" 또는 "개인부담"만 사유로 추출
     const extractedReason = MEAL_LABEL[mealParam].split(" | ")[0];
 
     try {
-      // API 명세에 맞춰 신청 데이터 전송
       await postMealApplication({
         teacherId: selectedId,
         meal: mealParam,
@@ -105,29 +101,13 @@ const ApplicationTeacherPage = () => {
         reason: extractedReason,
       });
 
-      // 신청 성공 후 메인 페이지로 돌아갈 때, 조회하던 날짜와 유형(LUNCH/DINNER)을 유지합니다.
+      alert("신청완료 되었습니다");
+
       const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
       navigate(`/?date=${dateParam}&meal=${baseMeal}`);
     } catch (err: any) {
-      // 🚨수정된 부분: isAxiosError 타입 가드를 사용하여 안전하게 에러를 처리합니다.
-      if (isAxiosError(err)) {
-        const status = err.response?.status;
-        const message = err.response?.data?.message;
-
-        if (status === 400) {
-          alert(message || "입력 정보가 올바르지 않습니다.");
-        } else if (status === 404) {
-          alert("존재하지 않는 교직원입니다.");
-        } else if (status === 409) {
-          alert("해당 날짜에 이미 신청 내역이 존재합니다.");
-        } else {
-          alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        }
-      } else {
-        // Axios 에러가 아닌 기타 예외(TypeError 등) 처리
-        alert("알 수 없는 오류가 발생했습니다. (클라이언트 오류)");
-        console.error(err);
-      }
+      alert("신청실패, 다시 시도해주세요");
+      console.error(err);
       setIsSubmitting(false);
     }
   };
@@ -142,7 +122,6 @@ const ApplicationTeacherPage = () => {
           </TabContainer>
 
           <MainContent>
-            {/* 왼쪽: 검색 및 가상 키보드 세션 */}
             <SearchSection>
               <SearchInputWrapper>
                 <StyledInput

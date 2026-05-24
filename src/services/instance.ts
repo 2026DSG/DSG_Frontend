@@ -30,7 +30,8 @@ export async function reissueAccessToken(): Promise<void> {
   if (!refreshToken) {
     console.error("[토큰 재발급 실패] refreshToken 없음.");
     isReissuing = false;
-    return;
+    localStorage.removeItem("accessToken");
+    throw new Error("NO_REFRESH_TOKEN");
   }
 
   try {
@@ -47,8 +48,7 @@ export async function reissueAccessToken(): Promise<void> {
         "[토큰 재발급 실패] 응답 데이터가 올바르지 않습니다:",
         data,
       );
-      isReissuing = false;
-      return;
+      throw new Error("INVALID_TOKEN_RESPONSE");
     }
 
     localStorage.setItem("accessToken", data.accessToken);
@@ -63,8 +63,16 @@ export async function reissueAccessToken(): Promise<void> {
     );
   } catch (err) {
     console.error("[토큰 재발급 실패] 알 수 없는 오류:", err);
-    localStorage.removeItem("refreshToken");
-    window.location.href = "/login";
+
+    const isAuthError =
+      axios.isAxiosError(err) &&
+      (err.response?.status === 401 || err.response?.status === 403);
+
+    if (isAuthError) {
+      localStorage.removeItem("refreshToken");
+    }
+
+    throw err;
   } finally {
     isReissuing = false;
   }

@@ -38,7 +38,29 @@ instance.interceptors.response.use(
           refreshPromise = null;
         });
       }
-      await refreshPromise;
+
+      try {
+        await refreshPromise;
+      } catch (refreshError) {
+        const refreshStatus = axios.isAxiosError(refreshError)
+          ? refreshError.response?.status
+          : undefined;
+
+        const shouldLogout =
+          (refreshError instanceof Error &&
+            (refreshError.message === "NO_REFRESH_TOKEN" ||
+              refreshError.message === "INVALID_TOKEN_RESPONSE")) ||
+          refreshStatus === 401 ||
+          refreshStatus === 403;
+
+        if (shouldLogout) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = "/login";
+        }
+
+        return Promise.reject(refreshError);
+      }
 
       const newAccessToken = localStorage.getItem("accessToken");
       if (newAccessToken) {
