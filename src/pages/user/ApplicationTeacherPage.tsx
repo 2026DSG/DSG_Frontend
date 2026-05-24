@@ -91,11 +91,9 @@ const ApplicationTeacherPage = () => {
     if (selectedId === null || isSubmitting) return;
     setIsSubmitting(true);
 
-    // 라벨에서 "초과근무" 또는 "개인부담"만 사유로 추출
     const extractedReason = MEAL_LABEL[mealParam].split(" | ")[0];
 
     try {
-      // API 명세에 맞춰 신청 데이터 전송
       await postMealApplication({
         teacherId: selectedId,
         meal: mealParam,
@@ -103,14 +101,11 @@ const ApplicationTeacherPage = () => {
         reason: extractedReason,
       });
 
-      // 🚨수정된 부분: 신청 완료 시 안내창 표시
       alert("신청완료 되었습니다");
 
-      // 신청 성공 후 메인 페이지로 돌아갈 때, 조회하던 날짜와 유형(LUNCH/DINNER)을 유지합니다.
       const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
       navigate(`/?date=${dateParam}&meal=${baseMeal}`);
     } catch (err: any) {
-      // 🚨수정된 부분: 신청 실패 시 안내창 표시
       alert("신청실패, 다시 시도해주세요");
       console.error(err);
       setIsSubmitting(false);
@@ -127,7 +122,6 @@ const ApplicationTeacherPage = () => {
           </TabContainer>
 
           <MainContent>
-            {/* 왼쪽: 검색 및 가상 키보드 세션 */}
             <SearchSection>
               <SearchInputWrapper>
                 <StyledInput
