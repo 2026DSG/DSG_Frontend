@@ -30,8 +30,16 @@ const is404 = (err: unknown): boolean =>
 
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const saved = sessionStorage.getItem("selectedDate");
+    return saved ? new Date(saved) : new Date();
+  });
   const [allApplicantList, setAllApplicantList] = useState<Applicant[]>([]);
+
+  const updateSelectedDate = (date: Date) => {
+    sessionStorage.setItem("selectedDate", date.toISOString());
+    setSelectedDate(date);
+  };
 
   const formatDate = (date: Date) => {
     const y = date.getFullYear();
@@ -60,19 +68,15 @@ const ApplicationListPage = () => {
   const applicantList = allApplicantList;
 
   const goToPrevDay = () => {
-    setSelectedDate((prev) => {
-      const d = new Date(prev);
-      d.setDate(d.getDate() - 1);
-      return d;
-    });
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() - 1);
+    updateSelectedDate(d);
   };
 
   const goToNextDay = () => {
-    setSelectedDate((prev) => {
-      const d = new Date(prev);
-      d.setDate(d.getDate() + 1);
-      return d;
-    });
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + 1);
+    updateSelectedDate(d);
   };
 
   return (
@@ -114,9 +118,7 @@ const ApplicationListPage = () => {
                     <Td>{mealLabel[applicant.meal] ?? applicant.meal}</Td>
                     <Td>{applicant.teacherName}</Td>
                     <Td>{applicant.department}</Td>
-                    <Td>
-                      {applicant.position}
-                    </Td>
+                    <Td>{applicant.position}</Td>
                     <Td>{applicant.reason}</Td>
                   </Tr>
                 ))
@@ -176,7 +178,7 @@ const ApplicationListPage = () => {
             <StyledCalendar
               value={selectedDate}
               onChange={(date) => {
-                setSelectedDate(date as Date);
+                updateSelectedDate(date as Date);
                 setIsOpen(false);
               }}
               calendarType="gregory"
