@@ -44,10 +44,6 @@ export async function reissueAccessToken(): Promise<void> {
     const data = response.data;
 
     if (!data?.accessToken || !data?.refreshToken) {
-      console.error(
-        "[토큰 재발급 실패] 응답 데이터가 올바르지 않습니다:",
-        data,
-      );
       throw new Error("INVALID_TOKEN_RESPONSE");
     }
 
