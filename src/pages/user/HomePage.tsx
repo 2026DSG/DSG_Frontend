@@ -42,7 +42,7 @@ const formatDateTime = (dateString?: string): string => {
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  
+
   return `${year}-${month}-${day}\u00A0\u00A0\u00A0\u00A0\u00A0${hours}:${minutes}`;
 };
 
@@ -90,18 +90,22 @@ const HomePage = () => {
       setIsLoading(true);
       try {
         const typesToFetch: MealType[] =
-          mealType === "LUNCH" ? ["LUNCH", "LUNCH_SELF"] : ["DINNER", "DINNER_SELF"];
+          mealType === "LUNCH"
+            ? ["LUNCH", "LUNCH_SELF"]
+            : ["DINNER", "DINNER_SELF"];
 
         const [normalData, selfData] = await Promise.all([
           getMealList(currentDateString, typesToFetch[0]),
           getMealList(currentDateString, typesToFetch[1]),
         ]);
 
-        const combined = [...normalData, ...selfData].sort((a: MealItem, b: MealItem) => {
-          const dateA = new Date(a.createdAt).getTime();
-          const dateB = new Date(b.createdAt).getTime();
-          return dateB - dateA;
-        });
+        const combined = [...normalData, ...selfData].sort(
+          (a: MealItem, b: MealItem) => {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+          },
+        );
 
         setMealList(combined);
       } catch {
@@ -165,8 +169,12 @@ const HomePage = () => {
           <ModalBox>
             <ModalMessage>정말 삭제하시겠습니까?</ModalMessage>
             <ModalButtons>
-              <CancelButton onClick={() => setDeletingId(null)}>취소</CancelButton>
-              <ConfirmDeleteButton onClick={handleDeleteConfirm}>삭제</ConfirmDeleteButton>
+              <CancelButton onClick={() => setDeletingId(null)}>
+                취소
+              </CancelButton>
+              <ConfirmDeleteButton onClick={handleDeleteConfirm}>
+                삭제
+              </ConfirmDeleteButton>
             </ModalButtons>
           </ModalBox>
         </ModalOverlay>
@@ -176,12 +184,6 @@ const HomePage = () => {
         <Header title="신청 목록" />
 
         <ControlRow>
-          <YearNavigator>
-            <img src={ArrowLeft as string} alt="이전 날짜" onClick={() => handleDateChange(-1)} />
-            <Years>{formatDate(currentDate)}</Years>
-            <img src={ArrowRight as string} alt="이후 날짜" onClick={() => handleDateChange(1)} />
-          </YearNavigator>
-
           <MealToggleGroup>
             <MealToggleButton
               active={mealType === "LUNCH"}
@@ -196,6 +198,20 @@ const HomePage = () => {
               석식
             </MealToggleButton>
           </MealToggleGroup>
+
+          <YearNavigator>
+            <img
+              src={ArrowLeft as string}
+              alt="이전 날짜"
+              onClick={() => handleDateChange(-1)}
+            />
+            <Years>{formatDate(currentDate)}</Years>
+            <img
+              src={ArrowRight as string}
+              alt="이후 날짜"
+              onClick={() => handleDateChange(1)}
+            />
+          </YearNavigator>
 
           {!isLoggedIn && (
             <LoginButton onClick={() => navigate("/login")}>
@@ -218,29 +234,37 @@ const HomePage = () => {
               </Tr>
             </Thead>
 
-           
-           <Tbody>
-             {!isLoggedIn && (
-               <Tr><EmptyTd colSpan={6}>로그인 해주세요.</EmptyTd></Tr>
-             )}
-           
-             {isLoggedIn && !isLoading && mealList.length === 0 && (
-               <Tr><EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd></Tr>
-             )}
-           
-             {!isLoading && mealList.map((item: MealItem) => (
-               <Tr key={item.applyId}>
-                 <Td>{item.teacherName}</Td>
-                 <Td>{item.reason}</Td>
-                 <Td>{item.department}</Td>
-                 <Td>{item.position}</Td>
-                 <Td>{formatDateTime(item.createdAt)}</Td>
-                 <Td>
-                   <DeleteButton onClick={() => handleDeleteClick(item.applyId)}>삭제</DeleteButton>
-                 </Td>
-               </Tr>
-             ))}
-           </Tbody>
+            <Tbody>
+              {!isLoggedIn && (
+                <Tr>
+                  <EmptyTd colSpan={6}>로그인 해주세요.</EmptyTd>
+                </Tr>
+              )}
+
+              {isLoggedIn && !isLoading && mealList.length === 0 && (
+                <Tr>
+                  <EmptyTd colSpan={6}>신청 내역이 없습니다.</EmptyTd>
+                </Tr>
+              )}
+
+              {!isLoading &&
+                mealList.map((item: MealItem) => (
+                  <Tr key={item.applyId}>
+                    <Td>{item.teacherName}</Td>
+                    <Td>{item.reason}</Td>
+                    <Td>{item.department}</Td>
+                    <Td>{item.position}</Td>
+                    <Td>{formatDateTime(item.createdAt)}</Td>
+                    <Td>
+                      <DeleteButton
+                        onClick={() => handleDeleteClick(item.applyId)}
+                      >
+                        삭제
+                      </DeleteButton>
+                    </Td>
+                  </Tr>
+                ))}
+            </Tbody>
           </Table>
         </TableWrapper>
 
@@ -273,6 +297,7 @@ const TotalContainer = styled.div`
 
 const ControlRow = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 20px;
   margin-top: 34px;
@@ -280,6 +305,7 @@ const ControlRow = styled.div`
 
 const YearNavigator = styled.div`
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 22px;
 
@@ -290,7 +316,7 @@ const YearNavigator = styled.div`
 `;
 
 const Years = styled.span`
-  font-size: 20px;
+  font-size: 30gpx;
   padding-bottom: 6px;
 `;
 
@@ -311,7 +337,7 @@ const MealToggleButton = styled.button<MealToggleButtonProps>`
 `;
 
 const LoginButton = styled.button`
-  margin-left: auto;
+  /* margin-left: auto; */
   display: flex;
   align-items: center;
   gap: 8px;
@@ -414,7 +440,8 @@ const ToastMessage = styled.div<ToastMessageProps>`
   font-size: 16px;
   font-weight: 600;
   color: white;
-  background-color: ${({ type }) => (type === "success" ? "#27ae60" : "#e74c3c")};
+  background-color: ${({ type }) =>
+    type === "success" ? "#27ae60" : "#e74c3c"};
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 `;
 
