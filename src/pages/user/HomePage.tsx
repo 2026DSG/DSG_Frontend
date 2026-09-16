@@ -316,7 +316,7 @@ const YearNavigator = styled.div`
 `;
 
 const Years = styled.span`
-  font-size: 30gpx;
+  font-size: 30px;
   padding-bottom: 6px;
 `;
 
