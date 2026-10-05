@@ -8,12 +8,15 @@ import Footer from "../../components/Footer";
 import { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+
 import {
   getApplyList,
   downloadMonthlyExcel,
   downloadSummaryExcel,
 } from "../../services/apply";
+
 import type { Applicant } from "../../services/apply";
+import PrintPopup from "../../components/PrintPopup";
 
 const mealLabel: Record<string, string> = {
   LUNCH: "중식",
@@ -30,10 +33,13 @@ const is404 = (err: unknown): boolean =>
 
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
+
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const saved = sessionStorage.getItem("selectedDate");
     return saved ? new Date(saved) : new Date();
   });
+
   const [allApplicantList, setAllApplicantList] = useState<Applicant[]>([]);
 
   const updateSelectedDate = (date: Date) => {
@@ -45,6 +51,7 @@ const ApplicationListPage = () => {
     const y = date.getFullYear();
     const m = (date.getMonth() + 1).toString().padStart(2, "0");
     const d = date.getDate().toString().padStart(2, "0");
+
     return `${y} / ${m} / ${d}`;
   };
 
@@ -54,10 +61,14 @@ const ApplicationListPage = () => {
 
     getApplyList(date)
       .then((list) => {
-        if (!cancelled) setAllApplicantList(list);
+        if (!cancelled) {
+          setAllApplicantList(list);
+        }
       })
       .catch(() => {
-        if (!cancelled) alert("신청자 목록 조회에 실패했습니다.");
+        if (!cancelled) {
+          alert("신청자 목록 조회에 실패했습니다.");
+        }
       });
 
     return () => {
@@ -83,6 +94,7 @@ const ApplicationListPage = () => {
     <Body>
       <TotalContainer>
         <Header title="신청자리스트" showBack />
+
         <UpsideBox>
           <YearNavigator>
             <img src={ArrowLeft} onClick={goToPrevDay} alt="이전 날짜" />
@@ -95,6 +107,7 @@ const ApplicationListPage = () => {
             <CalenderText>달력 보기</CalenderText>
           </CalenderButton>
         </UpsideBox>
+
         <TableWrapper>
           <Table>
             <Thead>
@@ -128,22 +141,7 @@ const ApplicationListPage = () => {
         </TableWrapper>
 
         <ButtonBox>
-          <OutputButton
-            onClick={async () => {
-              try {
-                await downloadMonthlyExcel(
-                  selectedDate.getFullYear(),
-                  selectedDate.getMonth() + 1,
-                );
-              } catch (err) {
-                alert(
-                  is404(err)
-                    ? "해당 월의 신청 데이터가 없습니다."
-                    : "엑셀 다운로드에 실패했습니다.",
-                );
-              }
-            }}
-          >
+          <OutputButton onClick={() => setIsPrintModalOpen(true)}>
             신청자 월별 액셀 출력
           </OutputButton>
 
@@ -167,6 +165,7 @@ const ApplicationListPage = () => {
           </OutputButton>
         </ButtonBox>
       </TotalContainer>
+
       {isOpen && (
         <ModalOverlay onClick={() => setIsOpen(false)}>
           <CalendarBody onClick={(e) => e.stopPropagation()}>
@@ -175,6 +174,7 @@ const ApplicationListPage = () => {
               alt="닫기"
               onClick={() => setIsOpen(false)}
             />
+
             <StyledCalendar
               value={selectedDate}
               onChange={(date) => {
@@ -185,13 +185,34 @@ const ApplicationListPage = () => {
               view="month"
               prev2Label={null}
               next2Label={null}
-              prevLabel={<img src={ArrowLeft} />}
-              nextLabel={<img src={ArrowRight} />}
+              prevLabel={<img src={ArrowLeft} alt="이전" />}
+              nextLabel={<img src={ArrowRight} alt="다음" />}
               formatDay={(_, date) => String(date.getDate())}
             />
           </CalendarBody>
         </ModalOverlay>
       )}
+
+      {isPrintModalOpen && (
+        <PrintPopup
+          initialYear={selectedDate.getFullYear()}
+          initialMonth={selectedDate.getMonth() + 1}
+          onClose={() => setIsPrintModalOpen(false)}
+          onPrint={async (year, month) => {
+            try {
+              await downloadMonthlyExcel(year, month);
+              setIsPrintModalOpen(false);
+            } catch (err) {
+              alert(
+                is404(err)
+                  ? "해당 월의 신청 데이터가 없습니다."
+                  : "엑셀 다운로드에 실패했습니다.",
+              );
+            }
+          }}
+        />
+      )}
+
       <Footer />
     </Body>
   );
@@ -225,6 +246,7 @@ const YearNavigator = styled.div`
 
   img {
     width: 13px;
+    cursor: pointer;
   }
 `;
 
@@ -238,6 +260,7 @@ const CalenderButton = styled.button`
   border: none;
   border-radius: 6px;
   background-color: #c1c6d1;
+  cursor: pointer;
 
   img {
     margin-right: 14px;
@@ -337,6 +360,11 @@ const OutputButton = styled.button`
   border: none;
   border-radius: 12px;
   background-color: #444f61;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 const ModalOverlay = styled.div`
@@ -349,21 +377,21 @@ const ModalOverlay = styled.div`
 `;
 
 const CalendarBody = styled.div`
-  height: auto;
   position: relative;
+  width: 500px;
+  height: 300px;
   background: white;
   border-radius: 12px;
-  height: 300px;
 `;
 
 const CloseIcon = styled.img`
-  width: 20px;
-  height: 20px;
   position: absolute;
   top: 20px;
   right: 10px;
   width: 30px;
+  height: 30px;
   cursor: pointer;
+  z-index: 10;
 `;
 
 const StyledCalendar = styled(Calendar)`
