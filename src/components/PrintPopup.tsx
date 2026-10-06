@@ -116,6 +116,7 @@ export default function PrintPopup({
 
   const [year, setYear] = useState(initialYear ?? currentYear);
   const [month, setMonth] = useState(initialMonth ?? currentMonth);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const stepYear = (delta: 1 | -1) => {
     setYear((current) => {
@@ -181,6 +182,16 @@ export default function PrintPopup({
     setMonth(currentMonth);
   };
 
+  const handlePrint = async () => {
+    if (isPrinting) return;
+    setIsPrinting(true);
+    try {
+      await onPrint(year, month);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -237,7 +248,11 @@ export default function PrintPopup({
             <img src={Reset} alt="초기화" />
           </ResetButton>
 
-          <PrintButton type="button" onClick={() => onPrint(year, month)}>
+          <PrintButton
+            type="button"
+            disabled={isPrinting}
+            onClick={handlePrint}
+          >
             신청자 월별 액셀 출력
           </PrintButton>
         </Actions>
@@ -449,7 +464,6 @@ const Arrows = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: px;
   width: 24px;
   margin-left: 8px;
 `;
