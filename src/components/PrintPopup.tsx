@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import type { PointerEvent, WheelEvent } from "react";
-import Reset from "../assets/reset.svg";
+import Reset from "../assets/Reset.svg";
 import CloseButton from "../assets/CloseButton.svg";
 import arrowTop from "../assets/arrowTop.svg";
 import arrowBottom from "../assets/arrowBottom.svg";
