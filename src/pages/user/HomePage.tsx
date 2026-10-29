@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
-
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
 import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 import user from "../../assets/user.svg";
-
 import { getMealList, deleteMealById } from "../../services/mealService";
 import type { MealType, MealItem } from "../../services/mealService";
-
-type BaseMealType = "LUNCH" | "DINNER";
+import {
+  getKstToday,
+  getDefaultMealType,
+  shiftDate,
+  type BaseMealType,
+} from "../../utils/kst";
 
 type ToastType = "success" | "error";
 interface Toast {
@@ -20,19 +22,8 @@ interface Toast {
   type: ToastType;
 }
 
-const formatDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year} / ${month} /  ${day}`;
-};
-
-const toDateParam = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+const formatDate = (dateString: string): string =>
+  dateString.replaceAll("-", " / ");
 
 const formatDateTime = (dateString?: string): string => {
   if (!dateString) return "-";
@@ -46,29 +37,8 @@ const formatDateTime = (dateString?: string): string => {
   return `${year}-${month}-${day}\u00A0\u00A0\u00A0\u00A0\u00A0${hours}:${minutes}`;
 };
 
-const getDefaultMealType = (): BaseMealType => {
-  const now = new Date();
-  const totalMinute = now.getHours() * 60 + now.getMinutes();
-
-  if (totalMinute >= 13 * 60 + 30) {
-    return "DINNER";
-  } else if (totalMinute >= 6 * 60 + 40) {
-    return "LUNCH";
-  }
-
-  return "LUNCH";
-};
-
 const HomePage = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const dateQuery = searchParams.get("date");
-  const mealQuery = searchParams.get("meal") as BaseMealType | null;
-
-  const currentDate = dateQuery ? new Date(dateQuery) : new Date();
-  const mealType = mealQuery || getDefaultMealType();
-  const currentDateString = toDateParam(currentDate);
 
   const [mealList, setMealList] = useState<MealItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -76,6 +46,61 @@ const HomePage = () => {
   const [toast, setToast] = useState<Toast | null>(null);
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  // 한국 시간 기준 오늘 날짜 /  자동 식사 구분
+  const [today, setToday] = useState<string>(getKstToday());
+  const [autoMeal, setAutoMeal] = useState<BaseMealType>(getDefaultMealType());
+
+  // 수동으로 고른 식사 / 날짜 (없으면 자동값 사용). URL에는 저장하지 않음
+  const [manualMeal, setManualMeal] = useState<BaseMealType | null>(null);
+  const [manualDate, setManualDate] = useState<string | null>(null);
+
+  const mealType: BaseMealType = manualMeal ?? autoMeal;
+  const viewDate: string = manualDate ?? today; // 목록 조회에 쓰는 날짜
+  const isToday: boolean = viewDate === today; // 오늘일 때만 신청 가능
+
+  // 30초마다 / 화면 다시 보일 때 / 페이지 복원 / 터치하는 순간 => 갱신
+  useEffect(() => {
+    const update = () => {
+      setToday(getKstToday());
+      setAutoMeal(getDefaultMealType());
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") update();
+    };
+
+    const id = setInterval(update, 30_000);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", update);
+    window.addEventListener("pointerdown", update, true);
+
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", update);
+      window.removeEventListener("pointerdown", update, true);
+    };
+  }, []);
+
+  // 날짜(오늘)가 바뀌면 수동 선택 해제
+  useEffect(() => {
+    setManualMeal(null);
+    setManualDate(null);
+  }, [today]);
+
+  // 수동 식사 선택은 60초 뒤 자동값으로 복귀
+  useEffect(() => {
+    if (manualMeal === null) return;
+    const id = setTimeout(() => setManualMeal(null), 60_000);
+    return () => clearTimeout(id);
+  }, [manualMeal]);
+
+  // 수동 날짜 선택은 60초 뒤 오늘로 복귀 화살표를 누를 때마다 다시 시작
+  useEffect(() => {
+    if (manualDate === null) return;
+    const id = setTimeout(() => setManualDate(null), 60_000);
+    return () => clearTimeout(id);
+  }, [manualDate]);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -95,8 +120,8 @@ const HomePage = () => {
             : ["DINNER", "DINNER_SELF"];
 
         const [normalData, selfData] = await Promise.all([
-          getMealList(currentDateString, typesToFetch[0]),
-          getMealList(currentDateString, typesToFetch[1]),
+          getMealList(viewDate, typesToFetch[0]),
+          getMealList(viewDate, typesToFetch[1]),
         ]);
 
         const combined = [...normalData, ...selfData].sort(
@@ -116,7 +141,7 @@ const HomePage = () => {
     };
 
     loadData();
-  }, [currentDateString, mealType]);
+  }, [viewDate, mealType]);
 
   const showToast = (text: string, type: ToastType): void => {
     setToast({ text, type });
@@ -124,17 +149,22 @@ const HomePage = () => {
   };
 
   const handleDateChange = (step: number): void => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + step);
-    setSearchParams({ date: toDateParam(newDate), meal: mealType });
+    const next = shiftDate(viewDate, step);
+    // 오늘로 돌아오면 수동 선택 해제
+    setManualDate(next === today ? null : next);
   };
 
   const handleMealTypeChange = (newMeal: BaseMealType): void => {
-    setSearchParams({ date: currentDateString, meal: newMeal });
+    setManualMeal(newMeal);
   };
 
   const handleApplyClick = (): void => {
-    navigate(`/apply/reason?meal=${mealType}&date=${currentDateString}`);
+    if (!isToday) return; // 오늘이 아닌 날짜를 보는 중에는 신청 불가
+    navigate(`/apply/reason?meal=${mealType}`);
+  };
+
+  const handleOtherDateClick = (): void => {
+    navigate(`/apply/other-date?meal=${mealType}`);
   };
 
   const handleDeleteClick = (applyId: number): void => {
@@ -199,19 +229,25 @@ const HomePage = () => {
             </MealToggleButton>
           </MealToggleGroup>
 
-          <YearNavigator>
-            <img
-              src={ArrowLeft as string}
-              alt="이전 날짜"
-              onClick={() => handleDateChange(-1)}
-            />
-            <Years>{formatDate(currentDate)}</Years>
-            <img
-              src={ArrowRight as string}
-              alt="이후 날짜"
-              onClick={() => handleDateChange(1)}
-            />
-          </YearNavigator>
+          <DateGroup>
+            <YearNavigator>
+              <img
+                src={ArrowLeft as string}
+                alt="이전 날짜"
+                onClick={() => handleDateChange(-1)}
+              />
+              <Years>{formatDate(viewDate)}</Years>
+              <img
+                src={ArrowRight as string}
+                alt="이후 날짜"
+                onClick={() => handleDateChange(1)}
+              />
+            </YearNavigator>
+
+            <OtherDateButton onClick={handleOtherDateClick}>
+              다른 날짜로 신청
+            </OtherDateButton>
+          </DateGroup>
 
           {!isLoggedIn && (
             <LoginButton onClick={() => navigate("/login")}>
@@ -269,7 +305,9 @@ const HomePage = () => {
         </TableWrapper>
 
         <ButtonBox>
-          <ApplyButton onClick={handleApplyClick}>신청하기</ApplyButton>
+          <ApplyButton onClick={handleApplyClick} disabled={!isToday}>
+            {isToday ? "신청하기" : "당일만 신청 가능"}
+          </ApplyButton>
         </ButtonBox>
       </TotalContainer>
       <Footer />
@@ -283,6 +321,28 @@ interface MealToggleButtonProps {
 interface ToastMessageProps {
   type: ToastType;
 }
+
+const ButtonBox = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 32px;
+`;
+const DateGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 24px;
+`;
+
+const OtherDateButton = styled.button`
+  padding: 8px 16px;
+  font-size: 20px;
+  color: #444f61;
+  border: 1px solid #444f61;
+  border-radius: 6px;
+  background-color: white;
+  cursor: pointer;
+`;
 
 const Body = styled.div`
   width: 100vw;
@@ -413,12 +473,6 @@ const DeleteButton = styled.button`
   cursor: pointer;
 `;
 
-const ButtonBox = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 32px;
-`;
-
 const ApplyButton = styled.button`
   padding: 20px 120px;
   font-size: 32px;
@@ -427,6 +481,11 @@ const ApplyButton = styled.button`
   border-radius: 12px;
   background-color: #444f61;
   cursor: pointer;
+
+  &:disabled {
+    background-color: #bec3cc;
+    cursor: not-allowed;
+  }
 `;
 
 const ToastMessage = styled.div<ToastMessageProps>`

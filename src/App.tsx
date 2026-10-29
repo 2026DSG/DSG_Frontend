@@ -7,6 +7,7 @@ import HomePage from "./pages/user/HomePage";
 import ApplicationReasonPage from "./pages/user/ApplicationReasonPage";
 import ApplicationTeacherPage from "./pages/user/ApplicationTeacherPage";
 import LoginPage from "./pages/user/LoginPage";
+import OtherDatePage from "./pages/user/OtherdatePage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Route path="/apply/reason" element={<ApplicationReasonPage />} />
       <Route path="/apply/teacher" element={<ApplicationTeacherPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/apply/other-date" element={<OtherDatePage />} />
     </Routes>
   );
 }

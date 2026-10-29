@@ -378,7 +378,7 @@ const ModalOverlay = styled.div`
 
 const CalendarBody = styled.div`
   position: relative;
-  width: 500px;
+  width: 400px;
   height: 300px;
   background: white;
   border-radius: 12px;
@@ -388,7 +388,7 @@ const CloseIcon = styled.img`
   position: absolute;
   top: 20px;
   right: 10px;
-  width: 30px;
+  width: 20px;
   height: 30px;
   cursor: pointer;
   z-index: 10;

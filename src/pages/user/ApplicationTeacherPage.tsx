@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SearchIcon from "../../assets/Search.svg";
@@ -9,6 +9,12 @@ import { getTeacherList } from "../../services/teacher";
 import type { Teacher } from "../../services/teacher";
 import { postMealApplication } from "../../services/mealService";
 import type { MealType } from "../../services/mealService";
+import {
+  getKstToday,
+  getDefaultMealType,
+  getWeekday,
+  isAllowedOtherDate,
+} from "../../utils/kst";
 
 const MEAL_LABEL: Record<MealType, string> = {
   LUNCH: "초과근무 | 중식",
@@ -44,19 +50,40 @@ const KEYBOARD_ROWS = [
 
 const ApplicationTeacherPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const rawMeal = searchParams.get("meal");
-  const isValidMeal = rawMeal === "LUNCH" || rawMeal === "LUNCH_SELF" || rawMeal === "DINNER" || rawMeal === "DINNER_SELF";
-  const mealParam: MealType = isValidMeal ? (rawMeal as MealType) : "DINNER";
-  
-  const dateParam = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+  const isValidMeal =
+    rawMeal === "LUNCH" ||
+    rawMeal === "LUNCH_SELF" ||
+    rawMeal === "DINNER" ||
+    rawMeal === "DINNER_SELF";
+  const mealParam: MealType = isValidMeal
+    ? (rawMeal as MealType)
+    : getDefaultMealType();
+
+  // 다른 날짜 신청 흐름이면 라우트 state에 날짜가 들어 있다
+  const stateDate = (location.state as { date?: string } | null)?.date;
+  const isOtherDate = typeof stateDate === "string";
+
+  // 이 화면에 들어온 시점의 날짜를 고정
+  const startDateRef = useRef<string>(stateDate ?? getKstToday());
+  const targetDate = startDateRef.current;
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [chosungQuery, setChosungQuery] = useState<string>("");
+
+  // 다른 날짜 흐름인데 허용되지 않는 날짜로 들어오면 홈으로 돌려보낸다.
+  useEffect(() => {
+    if (isOtherDate && !isAllowedOtherDate(targetDate)) {
+      alert("선택할 수 없는 날짜입니다. 처음부터 다시 신청해주세요.");
+      navigate("/", { replace: true });
+    }
+  }, [isOtherDate, targetDate, navigate]);
 
   useEffect(() => {
     const load = async () => {
@@ -75,7 +102,7 @@ const ApplicationTeacherPage = () => {
 
   const filteredTeachers = useMemo(
     () => teachers.filter((t) => matchesChosung(t.name, chosungQuery)),
-    [teachers, chosungQuery]
+    [teachers, chosungQuery],
   );
 
   const handleKeyPress = (key: string) => {
@@ -89,23 +116,40 @@ const ApplicationTeacherPage = () => {
 
   const handleApply = async () => {
     if (selectedId === null || isSubmitting) return;
-    setIsSubmitting(true);
 
+    // 제출 직전 재검증
+    if (isOtherDate) {
+      // 자정이 지나서 선택한 날짜가 더 이상 허용 범위가 아니면 차단
+      if (!isAllowedOtherDate(targetDate)) {
+        alert("날짜가 변경되었습니다. 처음부터 다시 신청해주세요.");
+        navigate("/", { replace: true });
+        return;
+      }
+      // 요일 포함 확인
+      const ok = window.confirm(
+        `${targetDate} (${getWeekday(targetDate)})\n${MEAL_LABEL[mealParam]} 신청을 진행할까요?`,
+      );
+      if (!ok) return;
+    } else if (getKstToday() !== targetDate) {
+      alert("날짜가 변경되었습니다. 처음부터 다시 신청해주세요.");
+      navigate("/", { replace: true });
+      return;
+    }
+
+    setIsSubmitting(true);
     const extractedReason = MEAL_LABEL[mealParam].split(" | ")[0];
 
     try {
       await postMealApplication({
         teacherId: selectedId,
         meal: mealParam,
-        date: dateParam,
+        date: targetDate,
         reason: extractedReason,
       });
 
       alert("신청완료 되었습니다");
-
-      const baseMeal = mealParam.includes("LUNCH") ? "LUNCH" : "DINNER";
-      navigate(`/?date=${dateParam}&meal=${baseMeal}`);
-    } catch (err: any) {
+      navigate("/", { replace: true });
+    } catch (err) {
       alert("신청실패, 다시 시도해주세요");
       console.error(err);
       setIsSubmitting(false);
@@ -118,6 +162,11 @@ const ApplicationTeacherPage = () => {
         <TotalContainer>
           <Header title="교직원 선택" showBack />
           <TabContainer>
+            {isOtherDate && (
+              <DateLabel>
+                {targetDate} ({getWeekday(targetDate)})
+              </DateLabel>
+            )}
             <TabButton active={true}>{MEAL_LABEL[mealParam]}</TabButton>
           </TabContainer>
 
@@ -224,8 +273,14 @@ const TabContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   margin-top: 16px;
+`;
+
+const DateLabel = styled.span`
+  font-size: 18px;
+  font-weight: 600;
+  color: #444f61;
 `;
 
 const TabButton = styled.span<{ active: boolean }>`
@@ -319,8 +374,12 @@ const Th = styled.th`
 `;
 
 const Tbody = styled.tbody`
-  tr:nth-of-type(odd) { background-color: white; }
-  tr:nth-of-type(even) { background-color: #eef0f4; }
+  tr:nth-of-type(odd) {
+    background-color: white;
+  }
+  tr:nth-of-type(even) {
+    background-color: #eef0f4;
+  }
 `;
 
 const Tr = styled.tr<{ isSelected?: boolean }>`
