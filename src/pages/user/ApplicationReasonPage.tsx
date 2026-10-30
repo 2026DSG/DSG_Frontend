@@ -1,31 +1,27 @@
 import styled from "@emotion/styled";
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import {
+  getDefaultMealType,
+  getWeekday,
+  type BaseMealType,
+} from "../../utils/kst";
 
 type MealType = "LUNCH" | "LUNCH_SELF" | "DINNER" | "DINNER_SELF";
-type BaseMealType = "LUNCH" | "DINNER";
-
-const getDefaultMealType = (): BaseMealType => {
-  const now = new Date();
-  const totalMinute = now.getHours() * 60 + now.getMinutes();
-  
-  // 06:40 ~ 13:30 사이일 때만 중식
-  if (totalMinute >= 6 * 60 + 40 && totalMinute < 13 * 60 + 30) {
-    return "LUNCH";
-  }
-  return "DINNER";
-};
 
 const ApplicationReasonPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const dateParam = searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+  // 다른 날짜 신청 흐름이면 라우트 state에 날짜가 들어 있다.
+  // 기본 흐름은 state가 없고, 날짜는 교직원 선택 페이지에서 한국 시간 오늘로 정해진다.
+  const stateDate = (location.state as { date?: string } | null)?.date;
 
-  const [currentTime, setCurrentTime] = useState<string>('');
-  
+  const [currentTime, setCurrentTime] = useState<string>("");
+
   const [mealType, setMealType] = useState<BaseMealType>(() => {
     const mealParam = searchParams.get("meal");
     if (mealParam === "LUNCH" || mealParam === "DINNER") {
@@ -37,8 +33,8 @@ const ApplicationReasonPage = () => {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
       setCurrentTime(`${hours}:${minutes}`);
     };
     updateTime();
@@ -56,8 +52,10 @@ const ApplicationReasonPage = () => {
       finalMeal = isSelf ? "DINNER_SELF" : "DINNER";
     }
 
-    // 리액트 라우터 화면 주소인 /apply/teacher 로 올바르게 이동합니다.
-    navigate(`/apply/teacher?meal=${finalMeal}&date=${dateParam}`);
+    // 날짜는 URL이 아니라 라우트 state로만 이어서 전달 (다른 날짜 흐름일 때만)
+    navigate(`/apply/teacher?meal=${finalMeal}`, {
+      state: stateDate ? { date: stateDate } : undefined,
+    });
   };
 
   return (
@@ -69,9 +67,16 @@ const ApplicationReasonPage = () => {
           <TopRow>
             <TimeDisplay>{currentTime}</TimeDisplay>
 
-            <MealTypeText>
-              {mealType === "LUNCH" ? "중식" : "석식"}
-            </MealTypeText>
+            <TitleBox>
+              {stateDate && (
+                <DateText>
+                  {stateDate.replaceAll("-", " / ")} ({getWeekday(stateDate)})
+                </DateText>
+              )}
+              <MealTypeText>
+                {mealType === "LUNCH" ? "중식" : "석식"}
+              </MealTypeText>
+            </TitleBox>
 
             <MealToggleGroup>
               {(["LUNCH", "DINNER"] as BaseMealType[]).map((meal) => (
@@ -133,6 +138,19 @@ const TopRow = styled.div`
 const TimeDisplay = styled.div`
   font-size: 24px;
   color: #333;
+`;
+
+const TitleBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+`;
+
+const DateText = styled.span`
+  font-size: 24px;
+  font-weight: 500;
+  color: #444f61;
 `;
 
 const MealTypeText = styled.h1`
