@@ -31,9 +31,11 @@ const is404 = (err: unknown): boolean =>
   "status" in err &&
   (err as { status: number }).status === 404;
 
+type PrintMode = "monthly" | "summary";
+
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
+  const [printMode, setPrintMode] = useState<PrintMode | null>(null);
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const saved = sessionStorage.getItem("selectedDate");
@@ -141,26 +143,11 @@ const ApplicationListPage = () => {
         </TableWrapper>
 
         <ButtonBox>
-          <OutputButton onClick={() => setIsPrintModalOpen(true)}>
-            신청자 월별 액셀 출력
+          <OutputButton onClick={() => setPrintMode("monthly")}>
+            신청자 월별 엑셀 출력
           </OutputButton>
 
-          <OutputButton
-            onClick={async () => {
-              try {
-                await downloadSummaryExcel(
-                  selectedDate.getFullYear(),
-                  selectedDate.getMonth() + 1,
-                );
-              } catch (err) {
-                alert(
-                  is404(err)
-                    ? "해당 월의 총괄 데이터가 없습니다."
-                    : "총괄표 다운로드에 실패했습니다.",
-                );
-              }
-            }}
-          >
+          <OutputButton onClick={() => setPrintMode("summary")}>
             총괄표 출력
           </OutputButton>
         </ButtonBox>
@@ -193,21 +180,36 @@ const ApplicationListPage = () => {
         </ModalOverlay>
       )}
 
-      {isPrintModalOpen && (
+      {printMode && (
         <PrintPopup
+          printLabel={
+            printMode === "summary" ? "총괄표 출력" : "신청자 월별 엑셀 출력"
+          }
           initialYear={selectedDate.getFullYear()}
           initialMonth={selectedDate.getMonth() + 1}
-          onClose={() => setIsPrintModalOpen(false)}
+          onClose={() => setPrintMode(null)}
           onPrint={async (year, month) => {
             try {
-              await downloadMonthlyExcel(year, month);
-              setIsPrintModalOpen(false);
+              if (printMode === "summary") {
+                await downloadSummaryExcel(year, month);
+              } else {
+                await downloadMonthlyExcel(year, month);
+              }
+              setPrintMode(null);
             } catch (err) {
-              alert(
-                is404(err)
-                  ? "해당 월의 신청 데이터가 없습니다."
-                  : "엑셀 다운로드에 실패했습니다.",
-              );
+              if (is404(err)) {
+                alert(
+                  printMode === "summary"
+                    ? "해당 월의 총괄 데이터가 없습니다."
+                    : "해당 월의 신청 데이터가 없습니다.",
+                );
+              } else {
+                alert(
+                  printMode === "summary"
+                    ? "총괄표 다운로드에 실패했습니다."
+                    : "엑셀 다운로드에 실패했습니다.",
+                );
+              }
             }
           }}
         />
