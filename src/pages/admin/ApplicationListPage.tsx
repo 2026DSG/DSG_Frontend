@@ -5,7 +5,7 @@ import ArrowRight from "../../assets/arrowRight.svg";
 import CloseButton from "../../assets/CloseButton.svg";
 import Calender from "../../assets/calender.svg";
 import Footer from "../../components/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
@@ -36,6 +36,7 @@ type PrintMode = "monthly" | "summary";
 const ApplicationListPage = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [printMode, setPrintMode] = useState<PrintMode | null>(null);
+  const printPopupId = useRef(0);
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const saved = sessionStorage.getItem("selectedDate");
@@ -55,6 +56,16 @@ const ApplicationListPage = () => {
     const d = date.getDate().toString().padStart(2, "0");
 
     return `${y} / ${m} / ${d}`;
+  };
+
+  const openPrintPopup = (mode: PrintMode) => {
+    printPopupId.current += 1;
+    setPrintMode(mode);
+  };
+
+  const closePrintPopup = () => {
+    printPopupId.current += 1;
+    setPrintMode(null);
   };
 
   useEffect(() => {
@@ -143,11 +154,11 @@ const ApplicationListPage = () => {
         </TableWrapper>
 
         <ButtonBox>
-          <OutputButton onClick={() => setPrintMode("monthly")}>
+          <OutputButton onClick={() => openPrintPopup("monthly")}>
             신청자 월별 엑셀 출력
           </OutputButton>
 
-          <OutputButton onClick={() => setPrintMode("summary")}>
+          <OutputButton onClick={() => openPrintPopup("summary")}>
             총괄표 출력
           </OutputButton>
         </ButtonBox>
@@ -187,25 +198,31 @@ const ApplicationListPage = () => {
           }
           initialYear={selectedDate.getFullYear()}
           initialMonth={selectedDate.getMonth() + 1}
-          onClose={() => setPrintMode(null)}
+          onClose={closePrintPopup}
           onPrint={async (year, month) => {
+            const requestId = printPopupId.current;
+            const requestedMode = printMode;
+
             try {
-              if (printMode === "summary") {
+              if (requestedMode === "summary") {
                 await downloadSummaryExcel(year, month);
               } else {
                 await downloadMonthlyExcel(year, month);
               }
-              setPrintMode(null);
+
+              if (printPopupId.current === requestId) {
+                closePrintPopup();
+              }
             } catch (err) {
               if (is404(err)) {
                 alert(
-                  printMode === "summary"
+                  requestedMode === "summary"
                     ? "해당 월의 총괄 데이터가 없습니다."
                     : "해당 월의 신청 데이터가 없습니다.",
                 );
               } else {
                 alert(
-                  printMode === "summary"
+                  requestedMode === "summary"
                     ? "총괄표 다운로드에 실패했습니다."
                     : "엑셀 다운로드에 실패했습니다.",
                 );
