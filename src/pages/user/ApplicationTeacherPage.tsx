@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -68,9 +68,7 @@ const ApplicationTeacherPage = () => {
   const isOtherDate = typeof stateDate === "string";
 
   // 이 화면에 들어온 시점의 날짜를 고정
-  const startDateRef = useRef<string>(stateDate ?? getKstToday());
-  const targetDate = startDateRef.current;
-
+  const [targetDate] = useState<string>(() => stateDate ?? getKstToday());
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);

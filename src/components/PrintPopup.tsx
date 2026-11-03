@@ -7,6 +7,10 @@ import arrowTop from "../assets/arrowTop.svg";
 import arrowBottom from "../assets/arrowBottom.svg";
 
 interface PrintPopupProps {
+  /** 팝업 제목 (기본: 출력 날짜 설정) */
+  title?: string;
+  /** 출력 버튼 글자 (예: "총괄표 출력", "신청자 월별 엑셀 출력") */
+  printLabel?: string;
   initialYear?: number;
   initialMonth?: number;
   yearMin?: number;
@@ -84,7 +88,7 @@ function WheelColumn({ label, listWidth, getText, onStep }: WheelColumnProps) {
             aria-label={`${label} 증가`}
             onClick={() => onStep(1)}
           >
-            <img src={arrowTop} />
+            <img src={arrowTop} alt="" />
           </ArrowButton>
 
           <ArrowButton
@@ -92,7 +96,7 @@ function WheelColumn({ label, listWidth, getText, onStep }: WheelColumnProps) {
             aria-label={`${label} 감소`}
             onClick={() => onStep(-1)}
           >
-            <img src={arrowBottom} />
+            <img src={arrowBottom} alt="" />
           </ArrowButton>
         </Arrows>
       </WheelArea>
@@ -102,6 +106,8 @@ function WheelColumn({ label, listWidth, getText, onStep }: WheelColumnProps) {
 }
 
 export default function PrintPopup({
+  title = "출력 날짜 설정",
+  printLabel = "신청자 월별 엑셀 출력",
   initialYear,
   initialMonth,
   yearMin = 1990,
@@ -222,10 +228,10 @@ export default function PrintPopup({
         onMouseDown={(e) => e.stopPropagation()}
       >
         <CloseBtn type="button" aria-label="닫기" onClick={onClose}>
-          <img src={CloseButton} />
+          <img src={CloseButton} alt="" />
         </CloseBtn>
 
-        <Title id="print-date-modal-title">출력 날짜 설정</Title>
+        <Title id="print-date-modal-title">{title}</Title>
 
         <Pickers>
           <WheelColumn
@@ -244,8 +250,8 @@ export default function PrintPopup({
         </Pickers>
 
         <Actions>
-          <ResetButton type="button" onClick={reset}>
-            <img src={Reset} alt="초기화" />
+          <ResetButton type="button" aria-label="초기화" onClick={reset}>
+            <img src={Reset} alt="" />
           </ResetButton>
 
           <PrintButton
@@ -253,7 +259,7 @@ export default function PrintPopup({
             disabled={isPrinting}
             onClick={handlePrint}
           >
-            신청자 월별 액셀 출력
+            {printLabel}
           </PrintButton>
         </Actions>
       </Modal>
@@ -324,13 +330,11 @@ const CloseBtn = styled.button`
   padding: 0;
   border: 0;
   background: transparent;
-  color: #000000;
   cursor: pointer;
 
-  svg {
+  img {
     width: 24px;
     height: 24px;
-    fill: currentColor;
   }
   &:hover {
     opacity: 0.7;
@@ -369,6 +373,8 @@ const WheelArea = styled.div`
   align-items: center;
 `;
 
+/* overflow: hidden 제거: 월 휠(72px)에서 "08" 같은 넓은 숫자가 잘리지 않도록.
+   위/아래 바깥 칸은 opacity 0 으로 숨겨지므로 삐져나와 보이지 않음 */
 const List = styled.div<{
   listWidth: number;
 }>`
@@ -376,7 +382,6 @@ const List = styled.div<{
   width: ${({ listWidth }) => listWidth}px;
   height: 208px;
   flex: none;
-  overflow: hidden;
   user-select: none;
   touch-action: none;
   cursor: ns-resize;
@@ -453,8 +458,8 @@ const Item = styled.div<{
       font-weight: ${style.weight};
       color: ${style.color};
       transform: translateY(${style.y}px);
-      opacity: ${hidden ? 0 : 1};
-      pointer-events: ${hidden ? "none" : "auto"};
+      opacity: ${hidden || offset === 2 ? 0 : 1};
+      pointer-events: ${hidden || offset === 2 ? "none" : "auto"};
     `;
   }}
 `;
@@ -477,15 +482,13 @@ const ArrowButton = styled.button`
   padding: 0;
   border: 0;
   background: none;
-  color: ${colors.chevron};
   cursor: pointer;
-  svg {
+  img {
     width: 24px;
     height: 24px;
-    fill: currentColor;
   }
   &:hover {
-    color: ${colors.sub};
+    opacity: 0.6;
   }
   &:focus-visible {
     outline: 2px solid ${colors.line};
@@ -522,12 +525,10 @@ const ResetButton = styled.button`
   border: 2px solid ${colors.line};
   border-radius: 12px;
   background: #ffffff;
-  color: #000000;
   cursor: pointer;
-  svg {
+  img {
     width: 30px;
     height: 30px;
-    fill: currentColor;
   }
   &:hover {
     background: #f7f8fa;
@@ -558,6 +559,12 @@ const PrintButton = styled.button`
   }
   &:active {
     transform: scale(0.98);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: none;
+    transform: none;
   }
   &:focus-visible {
     outline: 2px solid ${colors.line};
