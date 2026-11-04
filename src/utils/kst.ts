@@ -29,5 +29,6 @@ export const getWeekday = (dateString: string): string => {
   return ["일", "월", "화", "수", "목", "금", "토"][day];
 };
 
-export const isAllowedOtherDate = (dateString: string): boolean =>
-  dateString > getKstToday();
+// 과거/미래 모두 허용 항상 true 호출부 시그니처 유지를 위해 _date 인자를 남겨 둠
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const isAllowedOtherDate = (_date: string): boolean => true;

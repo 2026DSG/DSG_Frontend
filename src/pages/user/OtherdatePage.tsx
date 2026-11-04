@@ -8,12 +8,7 @@ import Footer from "../../components/Footer";
 import ArrowLeft from "../../assets/arrowLeft.svg";
 import ArrowRight from "../../assets/arrowRight.svg";
 
-import {
-  getKstToday,
-  shiftDate,
-  getWeekday,
-  isAllowedOtherDate,
-} from "../../utils/kst";
+import { getKstToday, getWeekday } from "../../utils/kst";
 
 const toLocalDate = (s: string): Date => {
   const [y, m, d] = s.split("-").map(Number);
@@ -38,18 +33,10 @@ const OtherDatePage = () => {
     };
   }, []);
 
-  const minDate = shiftDate(today, 1);
-
-  const validSelectedDate =
-    selectedDate !== null && selectedDate >= minDate ? selectedDate : null;
+  const validSelectedDate = selectedDate;
 
   const handleNext = () => {
     if (validSelectedDate === null) return;
-    if (!isAllowedOtherDate(validSelectedDate)) {
-      alert("선택할 수 없는 날짜입니다. 다시 선택해주세요.");
-      setSelectedDate(null);
-      return;
-    }
     const query = meal ? `?meal=${meal}` : "";
     navigate(`/apply/reason${query}`, { state: { date: validSelectedDate } });
   };
@@ -69,8 +56,7 @@ const OtherDatePage = () => {
                 onChange={(value) =>
                   setSelectedDate((value as Date).toLocaleDateString("sv-SE"))
                 }
-                minDate={toLocalDate(minDate)}
-                defaultActiveStartDate={toLocalDate(minDate)}
+                defaultActiveStartDate={toLocalDate(today)}
                 calendarType="gregory"
                 view="month"
                 prev2Label={null}
@@ -242,11 +228,18 @@ const StyledCalendar = styled(Calendar)`
 
   .react-calendar__tile:disabled abbr {
     color: #dcdcdc !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center
+    width: 44px;
+    height: 44px;
+    background: #444f61;
+    border-radous: 50%;
+    color: white !important
   }
   .react-calendar__tile--active {
     background: #444f61 !important;
     color: white !important;
-    border-radius: 50%;
   }
   .react-calendar__tile--active abbr {
     color: white !important;
