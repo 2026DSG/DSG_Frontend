@@ -29,5 +29,4 @@ export const getWeekday = (dateString: string): string => {
   return ["일", "월", "화", "수", "목", "금", "토"][day];
 };
 
-export const isAllowedOtherDate = (dateString: string): boolean =>
-  dateString > getKstToday();
+export const isAllowedOtherDate = (): boolean => true;
